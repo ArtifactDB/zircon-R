@@ -1,0 +1,108 @@
+#' Retrieve a file or its metadata 
+#'
+#' Retrieve metadata for a file or the file itself from an ArtifactDB using its REST endpoints.
+#'
+#' @param id String containing the ArtifactDB identifier for a file.
+#' This is a concatenated identifier involving the project name, file path and version,
+#' i.e., \code{<project>:<path>@<version>} (see Examples).
+#' @param url String containing the URL of the ArtifactDB REST endpoint.
+#' @param cache Function to perform caching, see Details.
+#' If \code{NULL}, no caching is performed.
+#' @param follow.links Logical scalar indicating whether to follow links, if \code{id} is a link to another target resource. 
+#' If \code{TRUE}, metadata for the target resource is returned; otherwise, metadata for the link itself is returned.
+#' @param notify.redirect Logical scalar indicating whether to notify the user if they were redirected to another resource.
+#' Note that this may still occur even if \code{follow.links=FALSE}, as the API contains implicit redirects based on the project version.
+#' If \code{NULL}, a notification is only printed for non-child resources.
+#' @param user.agent String containing the user agent, see \code{\link{authorizedVerb}}.
+#'
+#' @return
+#' A list containing metadata for the specified file.
+#' The contents will depend on the schema used by the ArtifactDB at \code{url}.
+#'
+#' @author Aaron Lun
+#'
+#' @details
+#' The caching function should accept:
+#' \itemize{
+#' \item \code{key}, the endpoint URL used to acquire the requested resource.
+#' This is used as a unique key for the requested metadata.
+#' The caching mechanism should convert this into a suitable file path, e.g., via \code{\link{URLencode}}.
+#' \item The \code{save} function expects a single argument, a path to a local file system generated from \code{key}.
+#' It will perform the request to the AritfactDB REST API, save the response to the specified path and return nothing.
+#' This should only be called if \code{key} does not already exist in the cache.
+#' }
+#' \code{cache} itself should return the path used in \code{save}. 
+#'
+#' @examples
+#' # No caching:
+#' X <- getFileMetadata(example.id, url = example.url)
+#' str(X)
+#'
+#' # Simple caching in the temporary directory:
+#' tmp.cache <- file.path(tempdir(), "zircon-cache")
+#' dir.create(tmp.cache)
+#' cache.fun <- function(key, save) {
+#'     path <- file.path(tmp.cache, URLencode(key, reserved=TRUE, repeated=TRUE))
+#'     if (!file.exists(path)) {
+#'         save(path)
+#'     } else {
+#'         cat("cache hit!\n")
+#'     }
+#'     path
+#' }
+#' X1 <- getFileMetadata(example.id, example.url, cache = cache.fun)
+#' X2 <- getFileMetadata(example.id, example.url, cache = cache.fun) # just re-uses the cache
+#'
+#' @seealso
+#' \code{\link{packID}}, to create \code{id} from various pieces of information.
+#'
+#' @export
+#' @rdname getFileMetadata
+#' @importFrom httr GET content write_disk
+#' @importFrom jsonlite fromJSON
+getFileMetadata <- function(id, url, cache=NULL, follow.links=FALSE, notify.redirect=NULL, user.agent=NULL) {
+    endpoint <- .get_file_metadata_url(id, url, follow.links=follow.links)
+
+    BASEFUN <- function(...) {
+        output <- authorizedVerb(GET, url=endpoint, ..., user.agent=user.agent)
+        checkResponse(output)
+        output
+    }
+
+    if (is.null(cache)) {
+        raw <- BASEFUN()
+        output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+    } else {
+        path <- cache(
+            key = endpoint,
+            save = function(path) BASEFUN(write_disk(path, overwrite=TRUE))
+        )
+        output <- fromJSON(path, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+    }
+
+    if (is.null(notify.redirect)) {
+        notify.redirect <- !(is.list(output) && isTRUE(output$is_child))
+    }
+
+    if (notify.redirect) {
+        if ("_extra" %in% names(output)) {
+            extras <- output[["_extra"]]
+            if ("id" %in% names(extras)) {
+                recovered.id <- extras[["id"]]
+                if (!identical(id, recovered.id)) {
+                    message("redirecting from '", id, "' to '", recovered.id, "'")
+                }
+            }
+        }
+    }
+
+    output
+}
+
+.get_file_metadata_url <- function(x, u, follow.links) {
+    endpoint <- paste(u, "files", URLencode(x, reserved=TRUE), "metadata", sep="/")
+    if (follow.links) {
+        endpoint <- paste0(endpoint, "?follow_link=true")
+    }
+    endpoint
+}

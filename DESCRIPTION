@@ -1,0 +1,24 @@
+Package: zircon
+Version: 1.9.5
+Date: 2022-08-02
+Title: Interface to an ArtifactDB REST API
+Description: o
+    Provides a friendly interface to the REST API of any ArtifactDB.
+    This abstracts away the endpoints for easier use in downstream packages.
+Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com")
+License: Genentech, Inc.
+Imports:
+    methods,
+    utils,
+    httr,
+    jsonlite
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    BiocStyle,
+    curl,
+    metacommons,
+    digest
+RoxygenNote: 7.2.1
+VignetteBuilder: knitr
