@@ -33,7 +33,7 @@
 .follow_redirects_faithfully <- function(FUN, url, ...) {
     attempts <- character(0)
     repeat {
-        req <- FUN(url, ..., config(followlocation = 0L))
+        req <- authorizedVerb(FUN, url, ..., config(followlocation = 0L))
         if (req$status_code >= 300 && req$status_code < 400) {
             attempts <- c(attempts, url)
 
