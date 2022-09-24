@@ -1,6 +1,17 @@
 # This tests the upload machinery based on the private key.
 # library(testthat); library(zircon); source("setup-private.R"); source("test-upload.R")
 
+token <- Sys.getenv("GITHUB_TOKEN", NA)
+if (is.na(token)) {
+    skip("missing a GITHUB_TOKEN environment variable for uploads")
+}
+olda <- identityAvailable(function() TRUE)
+oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
+on.exit({
+    identityAvailable(olda)
+    identityHeaders(oldh)
+})
+
 basic <- list(
     origin=list(
         list(type="DataSetDB", id="DS000000267", experiment="RNA-Seq_hsa_gene", version=1)
@@ -40,11 +51,10 @@ md5.3 <- digest::digest(file=fpath3)
 fpath30 <- file.path(tmp, rpath30)
 write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=basename(fpath3), description="FOO BAR")), auto_unbox=TRUE, pretty=TRUE))
 
-
 test_that("basic upload sequence works correctly", {
-              library(testthat); library(zircon); 
-              tmp <- "foo-test"
-              example.url <- "http://127.0.0.1:8787"
+        library(testthat); library(zircon); 
+        tmp <- "foo-test"
+        example.url <- "http://127.0.0.1:8787"
 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", as.integer(Sys.time()))
     info <- initializeUpload(tmp, list.files(tmp, recursive=TRUE), start.url)
@@ -52,7 +62,5 @@ test_that("basic upload sequence works correctly", {
 
     uploadFiles(tmp, parsed)
     completeUpload(example.url, parsed)
-
-    httr::GET(paste0(example.url, "/jobs/1"))
 })
 
