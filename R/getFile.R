@@ -74,12 +74,19 @@ getFile <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
     file.path(url, "files", URLencode(id, reserved=TRUE))
 }
 
+#' @importFrom httr GET config headers
+.get_presigned_url <- function(target) {
+    link.data <- authorizedVerb(GET, url=target, config(followlocation = 0L), allow.redirect=TRUE)
+    checkResponse(link.data, allow.redirect=TRUE)
+    headers(link.data)$location
+}
+
 #' @importFrom httr write_disk
 .generate_cacheable <- function(id, url, user.agent) {
     URL <- .get_raw_file_url(id, url)
     list(key = URL, save = function(path) {
-        res <- authorizedVerb(GET, url=URL, write_disk(path, overwrite=TRUE), user.agent = user.agent)
-        checkResponse(res)
+        final <- .get_presigned_url(URL)
+        download.file(final, path, mode="wb")
     })
 }
 
@@ -128,8 +135,5 @@ getFileURL <- function(id, url, expiry=NULL) {
         URL <- paste0(URL, "?expires_in=", expiry)
     }
 
-    link.data <- authorizedVerb(GET, url=URL, config(followlocation = 0L), allow.redirect=TRUE)
-    checkResponse(link.data, allow.redirect=TRUE)
-    headers(link.data)$location
+    .get_presigned_url(URL)
 }
-
