@@ -50,11 +50,11 @@ md5.3 <- digest::digest(file=fpath3)
 fpath30 <- file.path(tmp, rpath30)
 write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=basename(fpath3), description="FOO BAR")), auto_unbox=TRUE, pretty=TRUE))
 
+basic_version <- as.integer(Sys.time())
 test_that("basic upload sequence works correctly", {
-    version <- as.integer(Sys.time())
     f <- list.files(tmp, recursive=TRUE)
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", basic_version)
     info <- initializeUpload(tmp, f, start.url)
 
     parsed <- httr::content(info)
@@ -63,12 +63,20 @@ test_that("basic upload sequence works correctly", {
     uploadFiles(tmp, example.url, parsed)
     comp <- completeUpload(example.url, parsed)
 
-    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", basic_version), url=example.url)
     expect_identical(res$path, "blah.rds")
 
-    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    contents <- getFile(paste0("test-zircon-upload:blah.rds@", basic_version), url=example.url)
     expect_identical(readRDS(contents), LETTERS)
 })
+
+create_md5_links <- function(dir, to.link) {
+    mlinks <- list()
+    for (x in to.link) {
+        mlinks[[x]] <- jsonlite::fromJSON(file.path(dir, paste0(x, ".json")))$md5sum
+    }
+    return(mlinks)
+}
 
 test_that("md5-linked uploads work correctly (valid)", {
     # Creating another version now. This assumes that we can piggy-back off the previous one.
@@ -76,10 +84,7 @@ test_that("md5-linked uploads work correctly (valid)", {
 
     f <- list.files(tmp, recursive=TRUE)
     linkable <- which(!grepl(".json$", f))
-    mlinks <- list()
-    for (x in f[linkable]) {
-        mlinks[[x]] <- jsonlite::fromJSON(file.path(tmp, paste0(x, ".json")))$md5sum
-    }
+    mlinks <- create_md5_links(tmp, f[linkable])
     expect_true(length(mlinks) > 1)
     remaining <- f[-linkable]
 
@@ -99,6 +104,106 @@ test_that("md5-linked uploads work correctly (valid)", {
     linked <- res[["_extra"]][["link"]][["artifactdb_id"]]
     expect_type(linked, "character")
     expect_true(as.numeric(unpackID(linked)$version) < as.numeric(version))
+
+    # Confirm that the endpoints retrieve the file successfully.
+    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(readRDS(contents), LETTERS)
+})
+
+test_that("md5-linked uploads fail correctly (mismatch)", {
+    # Making sure we force a new upload if the md5sums don't match.
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    mlinks <- list()
+    for (x in f[linkable]) {
+        mlinks[[x]] <- "FOO"
+    }
+    expect_true(length(mlinks) > 1)
+    remaining <- f[-linkable]
+
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+
+    parsed <- httr::content(info)
+    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_true(length(parsed$links) == 0L)
+
+    # abortUpload(example_url, parsed)
+})
+
+test_that("md5-linked uploads fail correctly (missing files)", {
+    # Making sure we force a new upload if the file doesn't exist.
+    tmp2 <- tempfile()
+    dir.create(tmp2)
+
+    file.copy(file.path(tmp, "whee.rds"), file.path(tmp2, "aaa.rds"))
+    file.copy(file.path(tmp, "whee.rds.json"), file.path(tmp2, "aaa.rds.json"))
+
+    f <- list.files(tmp2, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    mlinks <- create_md5_links(tmp2, f[linkable])
+    expect_true(length(mlinks) > 0)
+
+    version <- as.integer(Sys.time()) 
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+
+    parsed <- httr::content(info)
+    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_true(length(parsed$links) == 0L)
+
+    # abortUpload(example_url, parsed)
+})
+
+test_that("md5-linked uploads fail correctly (missing project)", {
+    # Creating another version now. This assumes that we can piggy-back off the previous one.
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    mlinks <- create_md5_links(tmp, f[linkable])
+    expect_true(length(mlinks) > 1)
+    remaining <- f[-linkable]
+
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload2", version)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+
+    parsed <- httr::content(info)
+    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_true(length(parsed$links) == 0L)
+})
+
+test_that("manually linked uploads work correctly", {
+    # Making sure we force a new upload if the md5sums don't match.
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    alinks <- list()
+    for (x in f[linkable]) {
+        alinks[[x]] <- packID("test-zircon-upload", x, basic_version)
+    }
+    expect_true(length(alinks) > 1)
+    remaining <- f[-linkable]
+
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum")
+
+    parsed <- httr::content(info)
+    expect_true(all(f[linkable] %in% names(parsed$links)))
+    expect_true(all(remaining %in% names(parsed$presigned_urls)))
+
+    uploadFiles(tmp, example.url, parsed)
+    comp <- completeUpload(example.url, parsed)
+
+    # Confirm that a link exists in the metadata.
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(res$path, "blah.rds")
+    linked <- res[["_extra"]][["link"]][["artifactdb_id"]]
+    expect_type(linked, "character")
+    expect_identical(unpackID(linked)$version, basic_version)
 
     # Confirm that the endpoints retrieve the file successfully.
     contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
