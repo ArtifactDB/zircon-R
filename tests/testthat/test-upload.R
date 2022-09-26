@@ -1,8 +1,6 @@
 # This tests the upload machinery based on the private key.
 # library(testthat); library(zircon); source("setup-private.R"); source("test-upload.R")
 
-example.url <- "http://127.0.0.1:8787"
-
 token <- Sys.getenv("GITHUB_TOKEN", NA)
 if (is.na(token)) {
     skip("missing a GITHUB_TOKEN environment variable for uploads")
@@ -21,8 +19,7 @@ basic <- list(
     )
 )
 
-tmp <- "foo-test" # tempfile()
-unlink(tmp, recursive=TRUE)
+tmp <- tempfile()
 dir.create(tmp)
 
 rpath1 <- "whee.rds"
@@ -55,7 +52,7 @@ test_that("basic upload sequence works correctly", {
     f <- list.files(tmp, recursive=TRUE)
 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", basic_version)
-    info <- initializeUpload(tmp, f, start.url)
+    info <- initializeUpload(tmp, f, start.url, expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
@@ -80,6 +77,7 @@ create_md5_links <- function(dir, to.link) {
 
 test_that("md5-linked uploads work correctly (valid)", {
     # Creating another version now. This assumes that we can piggy-back off the previous one.
+    Sys.sleep(1)
     version <- as.integer(Sys.time()) 
 
     f <- list.files(tmp, recursive=TRUE)
@@ -89,7 +87,7 @@ test_that("md5-linked uploads work correctly (valid)", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f[linkable] %in% names(parsed$links)))
@@ -112,6 +110,7 @@ test_that("md5-linked uploads work correctly (valid)", {
 
 test_that("md5-linked uploads fail correctly (mismatch)", {
     # Making sure we force a new upload if the md5sums don't match.
+    Sys.sleep(1)
     version <- as.integer(Sys.time()) 
 
     f <- list.files(tmp, recursive=TRUE)
@@ -124,7 +123,7 @@ test_that("md5-linked uploads fail correctly (mismatch)", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
@@ -134,10 +133,13 @@ test_that("md5-linked uploads fail correctly (mismatch)", {
 })
 
 test_that("md5-linked uploads fail correctly (missing files)", {
-    # Making sure we force a new upload if the file doesn't exist.
+    Sys.sleep(1)
+    version <- as.integer(Sys.time()) 
+
     tmp2 <- tempfile()
     dir.create(tmp2)
 
+    # Making sure we force a new upload if the file doesn't exist.
     file.copy(file.path(tmp, "whee.rds"), file.path(tmp2, "aaa.rds"))
     file.copy(file.path(tmp, "whee.rds.json"), file.path(tmp2, "aaa.rds.json"))
 
@@ -146,9 +148,8 @@ test_that("md5-linked uploads fail correctly (missing files)", {
     mlinks <- create_md5_links(tmp2, f[linkable])
     expect_true(length(mlinks) > 0)
 
-    version <- as.integer(Sys.time()) 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+    info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
@@ -158,7 +159,7 @@ test_that("md5-linked uploads fail correctly (missing files)", {
 })
 
 test_that("md5-linked uploads fail correctly (missing project)", {
-    # Creating another version now. This assumes that we can piggy-back off the previous one.
+    Sys.sleep(1)
     version <- as.integer(Sys.time()) 
 
     f <- list.files(tmp, recursive=TRUE)
@@ -167,8 +168,9 @@ test_that("md5-linked uploads fail correctly (missing project)", {
     expect_true(length(mlinks) > 1)
     remaining <- f[-linkable]
 
+    # Creating a whole other version.
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload2", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
@@ -176,7 +178,7 @@ test_that("md5-linked uploads fail correctly (missing project)", {
 })
 
 test_that("manually linked uploads work correctly", {
-    # Making sure we force a new upload if the md5sums don't match.
+    Sys.sleep(1)
     version <- as.integer(Sys.time()) 
 
     f <- list.files(tmp, recursive=TRUE)
@@ -189,7 +191,7 @@ test_that("manually linked uploads work correctly", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum")
+    info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f[linkable] %in% names(parsed$links)))
@@ -203,7 +205,7 @@ test_that("manually linked uploads work correctly", {
     expect_identical(res$path, "blah.rds")
     linked <- res[["_extra"]][["link"]][["artifactdb_id"]]
     expect_type(linked, "character")
-    expect_identical(unpackID(linked)$version, basic_version)
+    expect_identical(unpackID(linked)$version, as.character(basic_version))
 
     # Confirm that the endpoints retrieve the file successfully.
     contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
