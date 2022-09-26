@@ -1,2 +1,4 @@
 ^\.github$
 ^\.gitignore$
+tests/testthat/setup-private.R
+tests/testthat/foo-test

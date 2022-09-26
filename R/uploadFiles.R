@@ -84,10 +84,14 @@ createUploadStartUrl <- function(url, project, version) {
 #' @export
 #' @rdname upload-utils
 #' @importFrom httr PUT stop_for_status
-uploadFiles <- function(dir, initial, user.agent=NULL, attempts=3) {
+uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     dedup.urls <- initial$links
     for (d in names(dedup.urls)) {
-        out <- .follow_redirects_faithfully(PUT, dedup.urls[[d]], user.agent=user.agent)
+        current <- dedup.urls[[d]]
+        if (!startsWith(current, "http")) {
+            current <- paste0(url, "/", current)
+        }
+        out <- .follow_redirects_faithfully(PUT, current, user.agent=user.agent)
         checkResponse(out)
     } 
 
@@ -127,6 +131,9 @@ completeUpload <- function(url, initial, index.wait=600, must.index=FALSE, permi
         end.url <- paste0(end.url, "&overwrite_permissions=true")
     }
 
+    if (is.null(names(permissions))){
+        names(permissions) <- seq_along(permissions)
+    }
     if (!is.null(permissions$viewers)) {
         permissions$viewers <- I(permissions$viewers)
     }

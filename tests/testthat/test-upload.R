@@ -1,16 +1,14 @@
 # This tests the upload machinery based on the private key.
 # library(testthat); library(zircon); source("setup-private.R"); source("test-upload.R")
 
+example.url <- "http://127.0.0.1:8787"
+
 token <- Sys.getenv("GITHUB_TOKEN", NA)
 if (is.na(token)) {
     skip("missing a GITHUB_TOKEN environment variable for uploads")
 }
 olda <- identityAvailable(function() TRUE)
 oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
-on.exit({
-    identityAvailable(olda)
-    identityHeaders(oldh)
-})
 
 basic <- list(
     origin=list(
@@ -24,6 +22,7 @@ basic <- list(
 )
 
 tmp <- "foo-test" # tempfile()
+unlink(tmp, recursive=TRUE)
 dir.create(tmp)
 
 rpath1 <- "whee.rds"
@@ -52,15 +51,59 @@ fpath30 <- file.path(tmp, rpath30)
 write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=basename(fpath3), description="FOO BAR")), auto_unbox=TRUE, pretty=TRUE))
 
 test_that("basic upload sequence works correctly", {
-        library(testthat); library(zircon); 
-        tmp <- "foo-test"
-        example.url <- "http://127.0.0.1:8787"
+    version <- as.integer(Sys.time())
+    f <- list.files(tmp, recursive=TRUE)
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", as.integer(Sys.time()))
-    info <- initializeUpload(tmp, list.files(tmp, recursive=TRUE), start.url)
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp, f, start.url)
+
     parsed <- httr::content(info)
+    expect_true(all(f %in% names(parsed$presigned_urls)))
 
-    uploadFiles(tmp, parsed)
-    completeUpload(example.url, parsed)
+    uploadFiles(tmp, example.url, parsed)
+    comp <- completeUpload(example.url, parsed)
+
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(res$path, "blah.rds")
+
+    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(readRDS(contents), LETTERS)
 })
 
+test_that("md5-linked uploads work correctly (valid)", {
+    # Creating another version now. This assumes that we can piggy-back off the previous one.
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    mlinks <- list()
+    for (x in f[linkable]) {
+        mlinks[[x]] <- jsonlite::fromJSON(file.path(tmp, paste0(x, ".json")))$md5sum
+    }
+    expect_true(length(mlinks) > 1)
+    remaining <- f[-linkable]
+
+    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum")
+
+    parsed <- httr::content(info)
+    expect_true(all(f[linkable] %in% names(parsed$links)))
+    expect_true(all(remaining %in% names(parsed$presigned_urls)))
+
+    uploadFiles(tmp, example.url, parsed)
+    comp <- completeUpload(example.url, parsed)
+
+    # Confirm that a link exists in the metadata.
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(res$path, "blah.rds")
+    linked <- res[["_extra"]][["link"]][["artifactdb_id"]]
+    expect_type(linked, "character")
+    expect_true(as.numeric(unpackID(linked)$version) < as.numeric(version))
+
+    # Confirm that the endpoints retrieve the file successfully.
+    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
+    expect_identical(readRDS(contents), LETTERS)
+})
+
+identityAvailable(olda)
+identityHeaders(oldh)
