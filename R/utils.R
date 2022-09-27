@@ -50,3 +50,18 @@
         return(req)
     }
 }
+
+.parse_link_url <- function(url, link.info) {
+    if (is.null(link.info)) {
+        return(NULL)
+    }
+
+    all.links <- strsplit(link.info, split=", ")[[1]]
+    chosen <- grep('rel=more', all.links)
+    if (length(chosen)!=1L) {
+        return(NULL) 
+    } 
+
+    raw.url <- all.links[chosen]
+    paste0(url, sub("<(.*)>.*", "\\1", all.links[chosen]))
+}
