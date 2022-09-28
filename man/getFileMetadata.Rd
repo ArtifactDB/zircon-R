@@ -4,14 +4,7 @@
 \alias{getFileMetadata}
 \title{Retrieve a file or its metadata}
 \usage{
-getFileMetadata(
-  id,
-  url,
-  cache = NULL,
-  follow.links = FALSE,
-  notify.redirect = NULL,
-  user.agent = NULL
-)
+getFileMetadata(id, url, cache = NULL, follow.links = FALSE, user.agent = NULL)
 }
 \arguments{
 \item{id}{String containing the ArtifactDB identifier for a file.
@@ -25,10 +18,6 @@ If \code{NULL}, no caching is performed.}
 
 \item{follow.links}{Logical scalar indicating whether to follow links, if \code{id} is a link to another target resource. 
 If \code{TRUE}, metadata for the target resource is returned; otherwise, metadata for the link itself is returned.}
-
-\item{notify.redirect}{Logical scalar indicating whether to notify the user if they were redirected to another resource.
-Note that this may still occur even if \code{follow.links=FALSE}, as the API contains implicit redirects based on the project version.
-If \code{NULL}, a notification is only printed for non-child resources.}
 
 \item{user.agent}{String containing the user agent, see \code{\link{authorizedVerb}}.}
 }
