@@ -17,16 +17,16 @@
 #' If parallel components are supplied, a character vector is returned.
 #'
 #' @examples
-#' unpackID("GPAX:asda/sds@12873128")
-#' packID("GPAX", "asda/sds", "12873128")
+#' unpackID(example.id)
+#' packID(example.project, "blah.rds", example.version)
 #'
 #' @author Aaron Lun
 #' @export
 unpackID <- function(id) {
     proj <- sub(":.*", "", id)
-    commit <- sub(".*@", "", id)
+    v <- sub(".*@", "", id)
     path <- sub("^[^:]+:(.+)@[^@]+$", "\\1", id)
-    list(project=proj, path=path, version=commit, commit=commit)
+    list(project=proj, path=path, version=v)
 }
 
 #' @export

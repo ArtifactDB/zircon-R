@@ -27,9 +27,10 @@
 #' If this fails or if \code{cache=FALSE}, it will just download the requested file directly.
 #' 
 #' @examples
-#' getFileURL(example.file.id, url = example.url)
+#' getFileURL(example.id, url = example.url)
 #'
-#' getFile(example.file.id, url = example.url)
+#' X <- getFile(example.id, url = example.url)
+#' readRDS(X) # as we know it's an RDS file.
 #'
 #' # Simple caching in the temporary directory:
 #' tmp.cache <- file.path(tempdir(), "zircon-cache")
@@ -43,8 +44,8 @@
 #'     }
 #'     path
 #' }
-#' getFile(example.file.id, example.url, cache = cache.fun)
-#' getFile(example.file.id, example.url, cache = cache.fun) 
+#' getFile(example.id, example.url, cache = cache.fun)
+#' getFile(example.id, example.url, cache = cache.fun) 
 #'
 #' @seealso
 #' \code{\link{packID}}, to create \code{id} from various pieces of information.

@@ -13,15 +13,12 @@
 #' @author Aaron Lun
 #'
 #' @examples
-#' project <- "test-zircon-upload"
-#' version <- "1664211935"
-#'
 #' # Project-wide metadata for a single version:
-#' out <- getProjectMetadata(project, version=version, url=example.url)
+#' out <- getProjectMetadata(example.project, version=example.version, url=example.url)
 #' length(out)
 #'
 #' # Project-wide metadata, all versions:
-#' out <- getProjectMetadata(project, url = example.url)
+#' out <- getProjectMetadata(example.project, url = example.url)
 #' length(out)
 #'
 #' @seealso

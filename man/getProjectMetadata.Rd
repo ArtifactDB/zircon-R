@@ -21,15 +21,12 @@ If \code{version} is specified, files are only returned for that versino of the 
 Retrieve metadata for a project from an ArtifactDB using its REST endpoints.
 }
 \examples{
-project <- "test-zircon-upload"
-version <- "1664211935"
-
 # Project-wide metadata for a single version:
-out <- getProjectMetadata(project, version=version, url=example.url)
+out <- getProjectMetadata(example.project, version=example.version, url=example.url)
 length(out)
 
 # Project-wide metadata, all versions:
-out <- getProjectMetadata(project, url = example.url)
+out <- getProjectMetadata(example.project, url = example.url)
 length(out)
 
 }

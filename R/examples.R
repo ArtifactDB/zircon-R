@@ -6,15 +6,18 @@
 #' @aliases
 #' example.url
 #' example.id
-#' example.file.id
+#' example.project
+#' example.version
 NULL
 
 #' @export
 example.url <- "https://gypsum-test.aaron-lun.workers.dev"
 
 #' @export
-example.id <- "scRNAseq:experiment.json@zeisel-brain" # fix this with an actual version
+example.id <- "test-zircon-upload:blah.rds@base"
 
 #' @export
-example.file.id <- "scRNAseq:assay-1/matrix.h5@zeisel-brain" # fix this with an actual version
+example.project <- "test-zircon-upload"
 
+#' @export
+example.version <- "base"

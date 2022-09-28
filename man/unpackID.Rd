@@ -31,8 +31,8 @@ If parallel components are supplied, a character vector is returned.
 Pack or unpack an identifier for a file in SebasDB.
 }
 \examples{
-unpackID("GPAX:asda/sds@12873128")
-packID("GPAX", "asda/sds", "12873128")
+unpackID(example.id)
+packID(example.project, "blah.rds", example.version)
 
 }
 \author{

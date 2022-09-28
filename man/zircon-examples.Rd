@@ -4,7 +4,8 @@
 \alias{zircon-examples}
 \alias{example.url}
 \alias{example.id}
-\alias{example.file.id}
+\alias{example.project}
+\alias{example.version}
 \title{Example values for testing}
 \description{
 Example instances of the ArtifactDB API and its data, for use in \pkg{zircon}'s own unit tests.
