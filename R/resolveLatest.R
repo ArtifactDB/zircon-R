@@ -31,9 +31,13 @@ resolveLatestVersion <- function(project, url) {
 
 #' @export
 resolveLatestID <- function(id, url) {
-    unpacked <- unpackID(id)
-    if (unpacked$version == "latest") {
-        unpacked$version <- resolveLatestVersion(unpacked$project, url)
+    if (endsWith(id, "@latest")) {
+        unpacked <- unpackID(id)
+        if (unpacked$version == "latest") {
+            unpacked$version <- resolveLatestVersion(unpacked$project, url)
+        }
+        do.call(packID, unpacked)
+    } else {
+        id
     }
-    do.call(packID, unpacked)
 }

@@ -54,6 +54,7 @@
 #' @importFrom methods is
 #' @importFrom utils download.file
 getFile <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
+    id <- resolveLatestID(id, url)
     if (!is.null(cache) && follow.links) {
         return(.get_original_linked_file(id, url, cache, user.agent))
     }

@@ -58,6 +58,7 @@
 #' @importFrom httr GET content write_disk
 #' @importFrom jsonlite fromJSON
 getFileMetadata <- function(id, url, cache=NULL, follow.links=FALSE, user.agent=NULL) {
+    id <- resolveLatestID(id, url)
     endpoint <- .get_file_metadata_url(id, url, follow.links=follow.links)
 
     BASEFUN <- function(...) {
