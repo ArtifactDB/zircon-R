@@ -2,3 +2,5 @@
 *.Rout
 *.swp
 *.html
+setup-private.R
+tests/testthat/foo-test
