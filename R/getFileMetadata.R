@@ -24,11 +24,12 @@
 #' \item \code{key}, the endpoint URL used to acquire the requested resource.
 #' This is used as a unique key for the requested metadata.
 #' The caching mechanism should convert this into a suitable file path, e.g., via \code{\link{URLencode}}.
-#' \item The \code{save} function expects a single argument, a path to a local file system generated from \code{key}.
+#' It can be assumed that any \code{latest} version aliases in the input \code{id} have already been resolved.
+#' \item \code{save}, a function that accepts a single string containing a path to a local file system generated from \code{key}.
 #' It will perform the request to the AritfactDB REST API, save the response to the specified path and return nothing.
-#' This should only be called if \code{key} does not already exist in the cache.
+#' The caching function should call \code{save} with a suitable key-derived path if \code{key} does not already exist in the cache.
 #' }
-#' \code{cache} itself should return the path used in \code{save}. 
+#' The caching function itself should return the path used in \code{save}. 
 #'
 #' @examples
 #' # No caching:
@@ -53,32 +54,35 @@
 #' @seealso
 #' \code{\link{packID}}, to create \code{id} from various pieces of information.
 #'
+#' \code{\link{identityAvailable}}, to inject authorization information into the API request.
+#'
 #' @export
 #' @rdname getFileMetadata
 #' @importFrom httr GET content write_disk
 #' @importFrom jsonlite fromJSON
 getFileMetadata <- function(id, url, cache=NULL, follow.links=FALSE, user.agent=NULL) {
-    id <- resolveLatestID(id, url)
-    endpoint <- .get_file_metadata_url(id, url, follow.links=follow.links)
+    if (!is.null(cache)) {
+        id <- resolveLatestID(id, url)
+    }
 
+    endpoint <- .get_file_metadata_url(id, url, follow.links=follow.links)
     BASEFUN <- function(...) {
         output <- authorizedVerb(GET, url=endpoint, ..., user.agent=user.agent)
         checkResponse(output)
         output
     }
 
-    if (is.null(cache)) {
-        raw <- BASEFUN()
-        output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
-    } else {
+    if (!is.null(cache)) {
         path <- cache(
             key = endpoint,
             save = function(path) BASEFUN(write_disk(path, overwrite=TRUE))
         )
         output <- fromJSON(path, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+        return(output)
     }
 
-    output
+    raw <- BASEFUN()
+    content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
 }
 
 .get_file_metadata_url <- function(x, u, follow.links) {

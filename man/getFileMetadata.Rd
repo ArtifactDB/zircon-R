@@ -34,11 +34,12 @@ The caching function should accept:
 \item \code{key}, the endpoint URL used to acquire the requested resource.
 This is used as a unique key for the requested metadata.
 The caching mechanism should convert this into a suitable file path, e.g., via \code{\link{URLencode}}.
-\item The \code{save} function expects a single argument, a path to a local file system generated from \code{key}.
+It can be assumed that any \code{latest} version aliases in the input \code{id} have already been resolved.
+\item \code{save}, a function that accepts a single string containing a path to a local file system generated from \code{key}.
 It will perform the request to the AritfactDB REST API, save the response to the specified path and return nothing.
-This should only be called if \code{key} does not already exist in the cache.
+The caching function should call \code{save} with a suitable key-derived path if \code{key} does not already exist in the cache.
 }
-\code{cache} itself should return the path used in \code{save}.
+The caching function itself should return the path used in \code{save}.
 }
 \examples{
 # No caching:
@@ -63,6 +64,8 @@ X2 <- getFileMetadata(example.id, example.url, cache = cache.fun) # just re-uses
 }
 \seealso{
 \code{\link{packID}}, to create \code{id} from various pieces of information.
+
+\code{\link{identityAvailable}}, to inject authorization information into the API request.
 }
 \author{
 Aaron Lun

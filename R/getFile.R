@@ -14,7 +14,6 @@
 #' @param cache Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 #' If \code{NULL}, no caching is performed.
 #' @param follow.links Logical scalar indicating whether to search for links to duplicate files, see Details.
-#' @param notify.redirect See \code{\link{.getFileMetadata}}.
 #'
 #' @return
 #' For \code{getFileURL}, a string containing a URL that can be used to download the specified file.
@@ -24,10 +23,12 @@
 #' @author Aaron Lun
 #'
 #' @details
-#' ArtifactDB instances support deduplication via links between identical files.
-#' If \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files, so as to avoid redownloading a duplciate file.
-#' If no local duplicate can be found, it will attempt to download the earliest version of the file among the set of duplicates, and then create hard links to the remaining versions in the cache directory.
-#' If this fails or if \code{cache=FALSE}, it will just download the requested file directly.
+#' ArtifactDB instances support linking between identical files to avoid storing unnecessary duplicates.
+#' If \code{cache} is provided and \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
+#' This avoids downloading another copy of the file if one is already available under a linked identifier.
+#' If no local duplicate can be found, \code{getFile} will download the earliest version of the file among the set of duplicates, 
+#' and then populate all other duplicates in the cache directory with hard links or copies.
+#' If this fails or if \code{cache=NULL}, it will just download the requested file directly.
 #' 
 #' @examples
 #' getFileURL(example.id, url = example.url)
@@ -57,23 +58,25 @@
 #' @importFrom methods is
 #' @importFrom utils download.file
 getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agent=NULL) {
-    id <- resolveLatestID(id, url)
-    if (!is.null(cache) && follow.links) {
-        return(.get_original_linked_file(id, url, cache, user.agent))
-    }
-
-    helpers <- .generate_cacheable(id, url, user.agent=user.agent)
-    SAVEFUN <- helpers$save
-    if (is.null(cache)) {
-        if (is.null(path)) {
-            path <- tempfile()
+    if (!is.null(cache)) {
+        id <- resolveLatestID(id, url)
+        if (follow.links) {
+            return(.get_original_linked_file(id, url, cache, user.agent))
         }
-        SAVEFUN(path)
-        return(path)
     }
 
-    URL <- helpers$key
-    return(cache(URL, SAVEFUN)) 
+    endpoint <- .get_raw_file_url(id, url)
+    SAVEFUN <- .generate_saver(endpoint, user.agent=user.agent)
+
+    if (!is.null(cache)) {
+        return(cache(endpoint, SAVEFUN)) 
+    }
+
+    if (is.null(path)) {
+        path <- tempfile()
+    }
+    SAVEFUN(path)
+    return(path)
 }
 
 #' @importFrom utils URLencode
@@ -89,12 +92,16 @@ getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agen
 }
 
 #' @importFrom httr write_disk
-.generate_cacheable <- function(id, url, user.agent) {
-    URL <- .get_raw_file_url(id, url)
-    list(key = URL, save = function(path) {
-        final <- .get_presigned_url(URL)
+.generate_saver <- function(endpoint, user.agent) {
+    if (is.null(user.agent)) {
+        user.agent <- .raw_user_agent()
+    }
+    function(path) {
+        old <- options(HTTPUserAgent=user.agent)
+        on.exit(options(old))
+        final <- .get_presigned_url(endpoint)
         download.file(final, path, mode="wb")
-    })
+    }
 }
 
 .get_original_linked_file <- function(id, url, cache, user.agent) {
@@ -109,6 +116,8 @@ getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agen
     # be forced to unnecessarily download the file.
     output <- try(getFileMetadata(id, url=url, cache=cache, follow.links=FALSE, user.agent=user.agent), silent=TRUE)
 
+    endpoint <- .get_raw_file_url(id, url)
+
     # Trying to fetch the linked file, if it's available. We recurse through
     # the chain of links until we get to the earliest file (or the chain 
     # was broken somewhere), at which point we just download the file. 
@@ -120,15 +129,13 @@ getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agen
 
             if (!is(linked, "try-error")) {
                 # This has the effect of populating all intermediate linking entries.
-                if (file.link(linked, target) || file.copy(linked, target)) {
-                    return(target)
-                }
+                return(cache(endpoint, function(path) file.link(linked, path) || file.copy(linked, path)))
             }
         }
     }
 
-    helpers <- .generate_cacheable(id, url, user.agent=user.agent)
-    cache(helpers$key, helpers$save)
+    SAVEFUN <- .generate_saver(endpoint, user.agent=user.agent)
+    cache(endpoint, SAVEFUN)
 }
 
 #' @export

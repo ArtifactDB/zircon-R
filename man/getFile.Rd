@@ -34,8 +34,6 @@ If \code{NULL}, no caching is performed.}
 
 \item{expiry}{Integer scalar specifying the time until expiry of the link, in seconds.
 Defaults to 120 if \code{NULL}; maximum value is 86400 (24 hours).}
-
-\item{notify.redirect}{See \code{\link{.getFileMetadata}}.}
 }
 \value{
 For \code{getFileURL}, a string containing a URL that can be used to download the specified file.
@@ -46,10 +44,12 @@ For \code{getFile}, a string containing a path to a cached file downloaded from 
 Retrieve a file from an ArtifactDB using its REST endpoints.
 }
 \details{
-ArtifactDB instances support deduplication via links between identical files.
-If \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files, so as to avoid redownloading a duplciate file.
-If no local duplicate can be found, it will attempt to download the earliest version of the file among the set of duplicates, and then create hard links to the remaining versions in the cache directory.
-If this fails or if \code{cache=FALSE}, it will just download the requested file directly.
+ArtifactDB instances support linking between identical files to avoid storing unnecessary duplicates.
+If \code{cache} is provided and \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
+This avoids downloading another copy of the file if one is already available under a linked identifier.
+If no local duplicate can be found, \code{getFile} will download the earliest version of the file among the set of duplicates, 
+and then populate all other duplicates in the cache directory with hard links or copies.
+If this fails or if \code{cache=NULL}, it will just download the requested file directly.
 }
 \examples{
 getFileURL(example.id, url = example.url)
