@@ -8,48 +8,8 @@ if (is.na(token)) {
 olda <- identityAvailable(function() TRUE)
 oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
 
-basic <- list(
-    `$schema`="generic_file/v1.json",
-    generic_file = list(
-        format="text"
-    )
-)
-
 tmp <- tempfile()
-dir.create(tmp)
-
-rpath1 <- "whee.txt"
-rpath10 <- paste0(rpath1, ".json")
-fpath1 <- file.path(tmp, rpath1)
-writeLines(con=fpath1, letters)
-fpath10 <- file.path(tmp, rpath10)
-md5.1 <- digest::digest(file=fpath1)
-write(file=fpath10, jsonlite::toJSON(c(basic, list(md5sum=md5.1, path=basename(fpath1))), auto_unbox=TRUE, pretty=TRUE))
-
-rpath2 <- "blah.txt"
-rpath20 <- paste0(rpath2, ".json")
-fpath2 <- file.path(tmp, rpath2)
-writeLines(con=fpath2, LETTERS)
-fpath20 <- file.path(tmp, rpath20)
-md5.2 <- digest::digest(file=fpath2)
-write(file=fpath20, jsonlite::toJSON(c(basic, list(md5sum=md5.2, path=basename(fpath2))), auto_unbox=TRUE, pretty=TRUE))
-
-rpath3 <- "foo/bar.txt"
-rpath30 <- paste0(rpath3, ".json")
-dir.create(file.path(tmp, "foo"))
-fpath3 <- file.path(tmp, rpath3)
-writeLines(con=fpath3, as.character(1:100))
-md5.3 <- digest::digest(file=fpath3)
-fpath30 <- file.path(tmp, rpath30)
-write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=basename(fpath3))), auto_unbox=TRUE, pretty=TRUE))
-
-### Base persistent upload, for reliable testing.
-# f <- list.files(tmp, recursive=TRUE)
-# start.url <- createUploadStartUrl(example.url, "test-zircon-upload", "base")
-# info <- initializeUpload(tmp, f, start.url)
-# parsed <- httr::content(info)
-# uploadFiles(tmp, example.url, parsed)
-# completeUpload(example.url, parsed)
+createMockProject(tmp)
 
 first_version <- as.integer(Sys.time())
 test_that("basic upload sequence works correctly", {
