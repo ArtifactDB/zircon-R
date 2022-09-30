@@ -68,6 +68,7 @@ The default of \code{NULL} will preserve any existing value for \code{read_acces
 
 If \code{version} is specified, these functions will get/set permissions for a specific version of a project.
 By default, if no permissions are placed on individual versions, they inherit their permissions from the project-level settings.
+This option is only applicable if version-level permissions are supported by the API at \code{url}.
 }
 \examples{
 getPermissions(example.project, url = example.url)

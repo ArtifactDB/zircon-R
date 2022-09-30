@@ -43,6 +43,7 @@
 #' 
 #' If \code{version} is specified, these functions will get/set permissions for a specific version of a project.
 #' By default, if no permissions are placed on individual versions, they inherit their permissions from the project-level settings.
+#' This option is only applicable if version-level permissions are supported by the API at \code{url}.
 #'
 #' @author Aaron Lun
 #'
@@ -70,7 +71,12 @@ getPermissions <- function(project, url, version=NULL) {
 
     out <- authorizedVerb(GET, url=url)
     checkResponse(out)
-    content(out, simplify=TRUE)
+
+    output <- content(out, simplifyVector=TRUE, simplifyMatrix=FALSE, simplifyDataFrame=FALSE)
+    output$viewers <- as.character(output$viewers)
+    output$owners <- as.character(output$owners)
+
+    output
 }
 
 #' @export
