@@ -47,7 +47,8 @@ These should be relative to \code{dir}.}
 Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be its MD5 sum.
 Names should not overlap with entries in \code{files}.}
 
-\item{dedup.md5.field}{String specifying the name of the metadata field containing the MD5 sum in existing ArtifactDB entries.}
+\item{dedup.md5.field}{String specifying the name of the metadata field containing the MD5 sum in existing ArtifactDB entries.
+Must be specified if \code{dedup.md5} is used.}
 
 \item{dedup.link}{Named character vector specifying which files are duplicates of resources in existing ArtifactDB IDs. 
 Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be the existing ArtifactDB ID.
@@ -75,7 +76,7 @@ Each attempt is followed by a 1 minute wait.}
 \item{must.index}{Logical scalar indicating whether to throw an error if the indexing is not successful.
 If \code{FALSE}, a warning is raised if the indexing times out (but an error will still be raised if the indexing explicitly fails).}
 
-\item{permissions}{A list containing permission information, see \code{\link{.getPermissions}}.
+\item{permissions}{A list containing permission information, see \code{\link{getPermissions}}.
 This usually contains the \code{owners} and \code{viewers} character vectors.}
 
 \item{overwrite.permissions}{Logical scalar indicating whether existing permissions should be overwritten.}
