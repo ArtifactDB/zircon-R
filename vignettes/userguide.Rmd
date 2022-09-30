@@ -1,0 +1,239 @@
+---
+title: R client for an ArtifactDB API
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+package: zircon
+date: "Revised: September 29, 2022"
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Saving and loading artifacts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE}
+library(BiocStyle)
+self <- Githubpkg("ArtifactDB/zircon-R", "zircon");
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+```
+
+# Introduction
+
+`r self` implements a simple R client for interacting with an ArtifactDB REST API.
+It provides functions to download/upload files and metadata given the API's URL.
+Developers can also inject authentication and caching mechanisms to build application-specific interfaces on top of `r self`.
+
+In this vignette, we'll be demonstrating the functionality of `r self` using our test ArtifactDB URL and a sample identifier.
+
+```{r}
+library(zircon)
+example.url
+example.id
+```
+
+# Identifier structure
+
+The "ArtifactDB identifier" for a file takes the form of `<PROJECT>:<PATH>@<VERSION>`.
+
+- `PROJECT` defines the name of the project.
+- `PATH` defines a path to a file within the project, possibly in a subdirectory.
+- `VERSION` defines the version of the project.
+
+We can process IDs using the `unpackID` and `packID` utilities.
+
+```{r}
+unpacked <- unpackID(example.id)
+unpacked
+do.call(packID, unpacked)
+```
+
+# Getting files and their metadata
+
+The `getFile()` function does as it says, downloading the file from the API.
+Note that this uses `download.file()` so setting `options(timeout=...)` may be required for larger files.
+
+```{r}
+path <- getFile(example.id, url=example.url)
+readLines(path)
+```
+
+Similarly, `getFileMetadata()` retrieves the file's metadata.
+
+```{r}
+meta <- getFileMetadata(example.id, url=example.url)
+str(meta)
+```
+
+Similarly, we can retrieve the metadata for all files in a given project:
+
+```{r}
+proj <- getProjectMetadata(example.project, url=example.url)
+length(proj) # number of files
+```
+
+# Resolving the latest version
+
+ArtifactDB APIs recognize the `"latest"` version alias, which will automatically redirect to the latest version of the project.
+
+```{r}
+id2 <- packID(unpacked$project, unpacked$path, "latest")
+meta2 <- getFileMetadata(id2, url=example.url)
+str(meta2) # May or may not be the same as 'meta', depending on available versions.
+```
+
+While convenient for users, this is not amenable to reproducibility as the redirection can change upon creation of a new version of the project.
+Developers may wish to resolve the `"latest"` alias to ensure that the actual version is recorded in their applications. 
+
+```{r}
+resolveLatestID(id2, example.url)
+resolveLatestVersion(unpacked$project, example.url)
+```
+
+# Checking permissions
+
+To see the permissions on a project:
+
+```{r}
+getPermissions(unpacked$project, example.url)
+```
+
+Project owners may change the permissions with `setPermissions()`, e.g.
+
+```{r, eval=FALSE}
+# Set to private:
+setPermissions(unpacked$project, example.url, public=FALSE)
+
+# Add viewers:
+setPermissions(unpacked$project, example.url, viewers="LTLA", action="append")
+
+# Remove viewers:
+setPermissions(unpacked$project, example.url, viewers="LTLA", action="remove")
+```
+
+The test API uses GitHub user names and tokens for authentication, though other deployments may use different mechanisms. 
+
+# Uploading new projects 
+
+With appropriate authorization, users can upload their own projects to an ArtifactDB API.
+This assumes that file artifacts have been generated with the appropriate JSON metadata.
+Check out [`ArtifactDB/BiocObjectSchemas`](https://github.com/ArtifactDB/BiocObjectSchemas) for examples of file/metadata uploads that are recognized by the test API;
+of course, an API maintainer may choose to use other schemas, so users should be aware of the target API.
+
+The upload process assumes that all to-be-uploaded files are available within a "staging" directory.
+This directory corresponds to a single version of the project; the `PATH` in the ArtifactDB identifier for each file is defined relative to the root of this directory.
+Given the directory path, the simplest upload code will look like:
+
+```{r, eval=FALSE}
+# Not evaluated as this vignette builder is not appropriately authorized.
+uploadProject(dir, example.url, project="test-zircon-upload", version="foo")
+```
+
+For finer control of the upload process, developers may prefer the following sequence of commands:
+
+```{r, eval=FALSE}
+# Not evaluated.
+f <- list.files(dir, recursive=TRUE)
+start.url <- createUploadStartUrl(example.url, "test-zircon-upload", "bar")
+info <- initializeUpload(dir, f, start.url)
+parsed <- httr::content(info)
+uploadFiles(dir, example.url, parsed)
+completeUpload(example.url, parsed)
+```
+
+Some of the more interesting upload options include:
+
+- `expires`: specify an expiry date for uploaded project versions, after which they will be automatically deleted from storage.
+  This is useful for testing with dummy projects. 
+- `dedup.md5`: hint to the ArtifactDB backend that some files might be redundant with their counterparts in a previous version of the project.
+  If they have the same path and MDF5 checksum, the backend will create a link in the new version rather than requiring a fresh upload.
+- `dedup.link`: instruct the ArtifactDB backend that a file is the same as another file that is already in storage (possibly from a different project).
+  The backend will then create a link in the current project.
+- `permissions`: set the permissions for the project, for new projects with no previous versions (unless `overwrite.permissions=TRUE`).
+
+# Caching API responses
+
+Some of the getter functions can perform caching by providing an appropriate function to `cache=`. 
+This function should check if the key already exists in the cache - if it does, the path in the cached file can be used directly, otherwise it should be downloaded from the API.
+
+```{r}
+tmp.cache <- file.path(tempdir(), "zircon-cache")
+dir.create(tmp.cache)
+cache.fun <- function(key, save) {
+    path <- file.path(tmp.cache, URLencode(key, reserved=TRUE, repeated=TRUE))
+    if (!file.exists(path)) {
+        save(path)
+    } else {
+        cat("cache hit!\n")
+    }
+    path
+}
+
+getFile(example.id, example.url, cache = cache.fun)
+
+# cache hit (for the file and its metadata), same file path reported:
+getFile(example.id, example.url, cache = cache.fun) 
+```
+
+Note that this mechanism will automatically resolve any `latest` aliases in the supplied identifiers.
+This avoids problems with stale caches after updating the project versions.
+
+Application developers are strongly advised to use some kind of caching to reduce bandwidth and data egress costs.
+
+# Customizing the authentication 
+
+Developers can globally specify the authentication procedure by through the `identityAvailable()` and `identityHeaders()` functions.
+To demonstrate, we'll be using GitHub personal access tokens:
+
+```{r}
+.fetch_token_from_cache <- function(exists.only) {
+    dir <- tools::R_user_dir("my_app_name")
+
+    # Storing token in plaintext, which is probably fine. If you want it to be
+    # more secure, that's up to you.
+    token.path <- file.path(dir, "token.txt")
+
+    if (file.exists(token.path)) {
+        if (exists.only) {
+            return(TRUE)
+        } else {
+            # A more advanced approach might also double-check that the cached
+            # token is still valid before returning it.
+            return(readLines(token.path))
+        }
+    }
+
+    if (exists.only) {
+        return(FALSE)
+    }
+
+    msg <- "Generate a GitHub personal access token at https://github.com/settings/tokens"
+    token <- readline(paste0(msg, "\nTOKEN: ")) # Use something like getPass for masking.
+    writeLines(con=token.path, token)
+    token
+}
+```
+
+We first set the `identityAvailable()` function, which indicates whether any identification information is available.
+This is used to check whether an initial API request should be attempted without any authentication, e.g., for public resources,
+which avoids burdening the user with unnecessary authentication work.
+
+```{r}
+identityAvailable(function() !is.null(.fetch_token_from_cache(TRUE)))
+```
+
+We then set the `identityHeader()` function, which generates the HTTP headers containing identity information.
+In this case, the test API uses the standard `Authorization` header to retrieve the token.
+
+```{r}
+identityHeaders(function() list(Authorization=paste("Bearer", .fetch_token_from_cache(FALSE))))
+```
+
+These headers will now be used in various `r self` functions to authenticate the user where necessary.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
