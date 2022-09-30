@@ -5,7 +5,14 @@
 \alias{getFileURL}
 \title{Retrieve a file}
 \usage{
-getFile(id, url, cache = NULL, follow.links = TRUE, user.agent = NULL)
+getFile(
+  id,
+  url,
+  path = NULL,
+  cache = NULL,
+  follow.links = TRUE,
+  user.agent = NULL
+)
 
 getFileURL(id, url, expiry = NULL)
 }
@@ -15,6 +22,10 @@ This is a concatenated identifier involving the project name, file path and vers
 i.e., \code{<project>:<path>@<version>} (see Examples).}
 
 \item{url}{String containing the URL of the ArtifactDB REST endpoint.}
+
+\item{path}{String containing the path to save the file.
+This is only used if \code{cache} is not supplied.
+Defaults to a temporary path if \code{NULL}.}
 
 \item{cache}{Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 If \code{NULL}, no caching is performed.}

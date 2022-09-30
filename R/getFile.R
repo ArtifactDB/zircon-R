@@ -7,6 +7,9 @@
 #' i.e., \code{<project>:<path>@<version>} (see Examples).
 #' @param expiry Integer scalar specifying the time until expiry of the link, in seconds.
 #' Defaults to 120 if \code{NULL}; maximum value is 86400 (24 hours).
+#' @param path String containing the path to save the file.
+#' This is only used if \code{cache} is not supplied.
+#' Defaults to a temporary path if \code{NULL}.
 #' @param url String containing the URL of the ArtifactDB REST endpoint.
 #' @param cache Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 #' If \code{NULL}, no caching is performed.
@@ -53,7 +56,7 @@
 #' @export
 #' @importFrom methods is
 #' @importFrom utils download.file
-getFile <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
+getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agent=NULL) {
     id <- resolveLatestID(id, url)
     if (!is.null(cache) && follow.links) {
         return(.get_original_linked_file(id, url, cache, user.agent))
@@ -62,9 +65,11 @@ getFile <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
     helpers <- .generate_cacheable(id, url, user.agent=user.agent)
     SAVEFUN <- helpers$save
     if (is.null(cache)) {
-        tmp <- tempfile()
-        SAVEFUN(tmp)
-        return(tmp)
+        if (is.null(path)) {
+            path <- tempfile()
+        }
+        SAVEFUN(path)
+        return(path)
     }
 
     URL <- helpers$key
