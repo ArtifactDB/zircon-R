@@ -33,9 +33,7 @@ resolveLatestVersion <- function(project, url) {
 resolveLatestID <- function(id, url) {
     if (endsWith(id, "@latest")) {
         unpacked <- unpackID(id)
-        if (unpacked$version == "latest") {
-            unpacked$version <- resolveLatestVersion(unpacked$project, url)
-        }
+        unpacked$version <- resolveLatestVersion(unpacked$project, url)
         do.call(packID, unpacked)
     } else {
         id
