@@ -9,37 +9,36 @@ olda <- identityAvailable(function() TRUE)
 oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
 
 basic <- list(
-    `$schema`="generic_object/v1.json",
-    annotated_object = list(
-        language="R",
-        class="letters"
+    `$schema`="generic_file/v1.json",
+    generic_file = list(
+        format="text"
     )
 )
 
 tmp <- tempfile()
 dir.create(tmp)
 
-rpath1 <- "whee.rds"
+rpath1 <- "whee.txt"
 rpath10 <- paste0(rpath1, ".json")
 fpath1 <- file.path(tmp, rpath1)
-saveRDS(file=fpath1, letters)
+writeLines(con=fpath1, letters)
 fpath10 <- file.path(tmp, rpath10)
 md5.1 <- digest::digest(file=fpath1)
 write(file=fpath10, jsonlite::toJSON(c(basic, list(md5sum=md5.1, path=basename(fpath1))), auto_unbox=TRUE, pretty=TRUE))
 
-rpath2 <- "blah.rds"
+rpath2 <- "blah.txt"
 rpath20 <- paste0(rpath2, ".json")
 fpath2 <- file.path(tmp, rpath2)
-saveRDS(file=fpath2, LETTERS)
+writeLines(con=fpath2, LETTERS)
 fpath20 <- file.path(tmp, rpath20)
 md5.2 <- digest::digest(file=fpath2)
 write(file=fpath20, jsonlite::toJSON(c(basic, list(md5sum=md5.2, path=basename(fpath2))), auto_unbox=TRUE, pretty=TRUE))
 
-rpath3 <- "foo/bar.rds"
+rpath3 <- "foo/bar.txt"
 rpath30 <- paste0(rpath3, ".json")
 dir.create(file.path(tmp, "foo"))
 fpath3 <- file.path(tmp, rpath3)
-saveRDS(file=fpath3, 1:100)
+writeLines(con=fpath3, as.character(1:100))
 md5.3 <- digest::digest(file=fpath3)
 fpath30 <- file.path(tmp, rpath30)
 write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=basename(fpath3))), auto_unbox=TRUE, pretty=TRUE))
@@ -65,11 +64,11 @@ test_that("basic upload sequence works correctly", {
     uploadFiles(tmp, example.url, parsed)
     comp <- completeUpload(example.url, parsed)
 
-    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", first_version), url=example.url)
-    expect_identical(res$path, "blah.rds")
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.txt@", first_version), url=example.url)
+    expect_identical(res$path, "blah.txt")
 
-    contents <- getFile(paste0("test-zircon-upload:blah.rds@", first_version), url=example.url)
-    expect_identical(readRDS(contents), LETTERS)
+    contents <- getFile(paste0("test-zircon-upload:blah.txt@", first_version), url=example.url)
+    expect_identical(readLines(contents), LETTERS)
 })
 
 create_md5_links <- function(dir, to.link) {
@@ -102,14 +101,14 @@ test_that("md5-linked uploads work correctly (valid)", {
     comp <- completeUpload(example.url, parsed)
 
     # Confirm that a link exists in the metadata.
-    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
-    expect_identical(res$path, "blah.rds")
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
+    expect_identical(res$path, "blah.txt")
     linked <- res[["_extra"]][["link"]][["id"]]
     expect_match(linked, "base$")
 
     # Confirm that the endpoints retrieve the file successfully.
-    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
-    expect_identical(readRDS(contents), LETTERS)
+    contents <- getFile(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
+    expect_identical(readLines(contents), LETTERS)
 })
 
 test_that("md5-linked uploads fail correctly (mismatch)", {
@@ -144,8 +143,8 @@ test_that("md5-linked uploads fail correctly (missing files)", {
     dir.create(tmp2)
 
     # Making sure we force a new upload if the file doesn't exist.
-    file.copy(file.path(tmp, "whee.rds"), file.path(tmp2, "aaa.rds"))
-    file.copy(file.path(tmp, "whee.rds.json"), file.path(tmp2, "aaa.rds.json"))
+    file.copy(file.path(tmp, "whee.txt"), file.path(tmp2, "aaa.txt"))
+    file.copy(file.path(tmp, "whee.txt.json"), file.path(tmp2, "aaa.txt.json"))
 
     f <- list.files(tmp2, recursive=TRUE)
     linkable <- which(!grepl(".json$", f))
@@ -205,15 +204,15 @@ test_that("manually linked uploads work correctly", {
     comp <- completeUpload(example.url, parsed)
 
     # Confirm that a link exists in the metadata.
-    res <- getFileMetadata(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
-    expect_identical(res$path, "blah.rds")
+    res <- getFileMetadata(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
+    expect_identical(res$path, "blah.txt")
     linked <- res[["_extra"]][["link"]][["id"]]
     expect_type(linked, "character")
     expect_identical(unpackID(linked)$version, "base")
 
     # Confirm that the endpoints retrieve the file successfully.
-    contents <- getFile(paste0("test-zircon-upload:blah.rds@", version), url=example.url)
-    expect_identical(readRDS(contents), LETTERS)
+    contents <- getFile(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
+    expect_identical(readLines(contents), LETTERS)
 })
 
 test_that("manually linked uploads fail for expirable projects", {

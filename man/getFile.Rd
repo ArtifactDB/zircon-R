@@ -44,7 +44,7 @@ If this fails or if \code{cache=FALSE}, it will just download the requested file
 getFileURL(example.id, url = example.url)
 
 X <- getFile(example.id, url = example.url)
-readRDS(X) # as we know it's an RDS file.
+readLines(X) # as we know it's a text file.
 
 # Simple caching in the temporary directory:
 tmp.cache <- file.path(tempdir(), "zircon-cache")
