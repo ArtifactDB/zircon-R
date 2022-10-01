@@ -1,0 +1,61 @@
+on: [push, pull_request]
+
+name: R CMD check
+
+jobs:
+  check:
+    name: R CMD check
+    runs-on: ubuntu-latest
+    container: bioconductor/bioconductor_docker:devel
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set directories
+      run: |
+        echo "R_PKG_DIR=${R_HOME}/site-library" >> $GITHUB_ENV
+
+    - name: Restore the package directory
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.R_PKG_DIR }}
+        key: installed-packages-${{ hashFiles('**/DESCRIPTION') }}
+
+    - name: Install dependencies
+      shell: Rscript {0}
+      run: |
+        deps <- remotes::local_package_deps(pkgdir = ".", dependencies=TRUE)
+        BiocManager::install(deps)
+
+    - name: Build the package
+      run: R CMD build .
+
+    - name: Test the package
+      run: |
+        tarball=$(ls *.tar.gz)
+        R CMD check --no-manual $tarball
+
+    # The remaining steps we only run on the master branch.
+    - name: Install system dependencies
+      if: github.ref == 'refs/heads/master'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y rsync
+
+    - name: Install ourselves
+      if: github.ref == 'refs/heads/master'
+      run: R CMD INSTALL .
+
+    - name: Run pkgdown
+      if: github.ref == 'refs/heads/master'
+      shell: Rscript {0}
+      run: |
+        BiocManager::install("pkgdown")
+        pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+
+    - name: Deploy to GitHub pages 🚀
+      if: github.ref == 'refs/heads/master'
+      uses: JamesIves/github-pages-deploy-action@v4.4.0
+      with:
+        clean: false
+        branch: gh-pages
+        folder: docs
