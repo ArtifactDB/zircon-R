@@ -63,7 +63,7 @@ test_that("md5-linked uploads work correctly (valid)", {
     # Confirm that a link exists in the metadata.
     res <- getFileMetadata(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
     expect_identical(res$path, "blah.txt")
-    linked <- res[["_extra"]][["link"]][["id"]]
+    linked <- res[["_extra"]][["link"]][["artifactdb"]]
     expect_match(linked, "base$")
 
     # Confirm that the endpoints retrieve the file successfully.

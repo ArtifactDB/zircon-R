@@ -8,14 +8,19 @@ test_that("file metadata getters work correctly", {
     expect_identical(X$path, unpacked$path)
     expect_identical(X[["_extra"]][["version"]], unpacked$version)
     expect_identical(X[["_extra"]][["project_id"]], unpacked$project)
+
+    # Report links.
+    linked <- getFileMetadata(packID("test-zircon-link", "foo/bar.txt", "base"), example.url)
+    unpack.link <- unpackID(linked[["_extra"]][["link"]][["artifactdb"]])
+    expect_identical(unpack.link$project, example.project)
 })
 
 test_that("file metadata getters work correctly with caching", {
-    cacheCounter$hits <- 0L
+    cachedCounter$hits <- 0L
     X1 <- getFileMetadata(example.id, example.url, cache = cacheTemporary)
     X2 <- getFileMetadata(example.id, example.url, cache = cacheTemporary) 
     expect_identical(X1, X2)
-    expect_true(cacheCounter$hits > 0)
+    expect_true(cachedCounter$hits > 0)
 })
 
 test_that("file metadata getters work correctly with the latest alias", {
@@ -53,11 +58,11 @@ test_that("file url getters work correctly", {
 })
 
 test_that("file getters work correctly with caching", {
-    cacheCounter$hits <- 0L
+    cachedCounter$hits <- 0L
     X1 <- getFile(example.id, example.url, cache = cacheTemporary)
     X2 <- getFile(example.id, example.url, cache = cacheTemporary) 
     expect_identical(X1, X2)
-    expect_true(cacheCounter$hits > 0)
+    expect_true(cachedCounter$hits > 0)
 })
 
 test_that("file getters work correctly with the latest alias", {
@@ -73,3 +78,21 @@ test_that("file getters work correctly with the latest alias", {
     expect_false(grepl("latest", cached))
 })
 
+test_that("file getters follow links correctly", {
+    link.path <- getFile(packID("test-zircon-link", "foo/bar.txt", "base"), example.url)
+    expect_identical(readLines(link.path), as.character(1:100))
+
+    # With caching, both the original and duplicate files are generated in the cache upon following the redirects.
+    cachedCounter$hits <- 0L
+    unlink(list.files(tmp.cache, recursive=TRUE, full=TRUE))
+    link.path <- getFile(packID("test-zircon-link", "foo/bar.txt", "base"), example.url, cache=cacheTemporary)
+    expect_identical(readLines(link.path), as.character(1:100))
+
+    f <- list.files(tmp.cache)
+    expect_true(any(grepl("test-zircon-link", f)))
+    expect_true(any(grepl("test-zircon-upload", f)))
+
+    expect_identical(cachedCounter$hits, 0L)
+    base <- getFile(packID("test-zircon-upload", "foo/bar.txt", "base"), example.url, cache=cacheTemporary)
+    expect_true(cachedCounter$hits > 0L)
+})

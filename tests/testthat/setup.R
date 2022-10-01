@@ -27,7 +27,7 @@ cacheTemporary <- function(key, save) {
     if (!file.exists(path)) {
         save(path)
     } else {
-        cached$hits <- cached$hits + 1L
+        cachedCounter$hits <- cachedCounter$hits + 1L
     }
     path
 }
