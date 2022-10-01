@@ -1,7 +1,6 @@
-#' Upload utilities, for wizards only
+#' Utilities for artifact upload
 #'
-#' These are utilities for uploading files to ArtifactDB.
-#' Not for the end-user or the typical package developer.
+#' Utilities for uploading files to an ArtifactDB instance, used internally by \code{\link{uploadProject}}.
 #'
 #' @param dir String containing the path to a project directory on the file system, containing files to be uploaded.
 #' @param files Character vector of paths to files to be uploaded within \code{dir}.
@@ -35,6 +34,7 @@
 #' @return
 #' \code{initializeUpload} will return the \code{response} object from hitting the upload endpoint.
 #' This will have already been checked for failure.
+#' If parsed as JSON, this produces a list with either presigned URL or link URL for each file, depending on whether deduplication was requested and successful.
 #' 
 #' \code{uploadFiles} will upload all files to their URLs and return \code{NULL}.
 #'
@@ -46,6 +46,70 @@
 #' we leave it to the caller to decide whether to add another error to the trace.
 #'
 #' \code{createUploadStartUrl} will create the \dQuote{standard} upload URL to be used in \code{start.url}.
+#'
+#' @section Linking to duplicate files:
+#' ArtifactDB instances are capable of creating links to represent identical files, similar to symbolic links on a typical file system.
+#' This avoids the need to explicitly store a duplicate copy of a file in another project or version.
+#' It is particularly useful when dealing with new project versions where only a subset of files have changed.
+#'
+#' The first deduplication mechanism is implicit and based on the MD5 checksum in \code{dedup.md5}.
+#' When used in \code{initializeUpload}, the ArtifactDB backend will check the most recent previous version of the project (if any exists) for files with the same path and checksum.
+#' If such files are found, the backend will automatically create a link to that file in the previous version, avoiding the need to upload a new copy in \code{uploadFiles}.
+#'
+#' The second mechanism in \code{dedup.link} is more explicit, relying on the uploader to supply the ArtifactDB identifier of the existing file to be linked to.
+#' This involves a bit more work as it requires the uploader to keep track of the duplication.
+#' However, it is also more powerful than the MD5-based method as it can be used to link files across different projects.
+#'
+#' Developers can check that the links (especially those from \code{dedup.md5}) were created by inspecting the \code{\link{contents}} of the \code{initializeUpload} output.
+#' If the to-be-linked file appears in the \code{links} field, the link was created; otherwise, the file must be uploaded via the \code{presigned_urls}.
+#'
+#' @details
+#' Use of these utilities will almost always require appropriate authentication/authorization with the target API.
+#' Developers should ensure that \code{\link{identityHeaders}} and friends are set accordingly.
+#'
+#' Setting \code{expires} in \code{initializeUpload} is useful for testing the upload procedure without creating a permanent copy of the files.
+#' Project versions created with \code{expires} will be automatically removed after the expiry interval, freeing up space for real data.
+#' 
+#' @examples
+#' # Creating a mock project.
+#' src <- system.file("scripts", "mock.R", package="zircon")
+#' source(src)
+#' tmp <- tempfile()
+#' createMockProject(tmp)
+#' 
+#' f <- list.files(tmp, recursive=TRUE)
+#' f
+#' start.url <- createUploadStartURL(example.url, "test-zircon-upload", "base2")
+#' start.url
+#'
+#' # Basic upload sequence, for testing:
+#' \dontrun{
+#' init <- initializeUpload(tmp, f, start.url, expires=1)
+#' parsed <- httr::content(init)
+#' uploadFiles(tmp, example.url, parsed)
+#' completeUpload(example.url, parsed)
+#' }
+#'
+#' # Demonstrating how to create links:
+#' actual.files <- f[!endsWith(f, ".json")]
+#' md5 <- digest::digest(file=file.path(tmp, actual.files[1]))
+#' names(md5) <- actual.files[1]
+#'
+#' explicit <- packID(example.project, actual.files[2], example.version)
+#' names(explicit) <- actual.files[2]
+#'
+#' \dontrun{
+#' start.url <- createUploadStartURL(example.url, "test-zircon-upload", "relinked")
+#' init <- initializeUpload(tmp, start.url=start.url, expires=1,
+#'     files=setdiff(f, c(names(md5), names(explicit))),
+#'     dedup.md5=md5, dedup.md5.field="md5sum", dedup.link=explicit)
+#' parsed <- httr::content(init)
+#' uploadFiles(tmp, example.url, parsed)
+#' completeUpload(example.url, parsed)
+#' }
+#'
+#' @seealso
+#' \code{\link{uploadProject}}, for a more user-friendly wrapper around these utilities.
 #'
 #' @author Aaron Lun
 #' @export
@@ -92,7 +156,7 @@ initializeUpload <- function(dir, files, start.url, dedup.md5=NULL, dedup.md5.fi
 
 #' @export
 #' @rdname upload-utils
-createUploadStartUrl <- function(url, project, version) {
+createUploadStartURL <- function(url, project, version) {
     paste0(url, "/projects/", project, "/version/", version, "/upload")
 }
 

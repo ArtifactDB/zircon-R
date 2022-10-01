@@ -47,6 +47,28 @@ On success, \code{NULL} is returned invisibly.
 \description{
 Upload a new version of a project, given a staging directory containing files and their metadata.
 }
+\details{
+Use of this function will almost always require appropriate authentication/authorization with the target API.
+Developers should ensure that \code{\link{identityHeaders}} and friends are set accordingly.
+
+Users should consider setting \code{expires} in \code{...} when testing uploads, to avoid creating a permanent copy of test files.
+Check out \code{?\link{initializeUpload}} for more details.
+
+Advanced users can reduce upload bandwidth and storage footprint by creating links to duplicate files between versions or projects.
+Check out \code{?\link{initializeUpload}} for more details.
+}
+\examples{
+# Creating a mock project.
+src <- system.file("scripts", "mock.R", package="zircon")
+source(src)
+tmp <- tempfile()
+createMockProject(tmp)
+
+# Performing a basic upload:
+\dontrun{
+uploadProject(tmp, example.url, "test-zircon-upload", "foobar", expires=1)
+}
+}
 \seealso{
 \code{\link{uploadFiles}} and related functions, for the internal utilities.
 }
