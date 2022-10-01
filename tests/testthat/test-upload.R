@@ -1,13 +1,13 @@
 # This tests the upload machinery based on the private key.
-# library(testthat); library(zircon); source("setup-private.R"); source("test-upload.R")
+# library(testthat); library(zircon); source("setup-private.R"); source("setup.R"); source("test-upload.R")
 
-token <- Sys.getenv("GITHUB_TOKEN", NA)
-if (is.na(token)) {
+fun <- setGithubIdentities()
+if (is.null(fun)) {
     skip("missing a GITHUB_TOKEN environment variable for uploads")
 }
-olda <- identityAvailable(function() TRUE)
-oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
 
+src <- system.file("scripts", "mock.R", package="zircon")
+source(src)
 tmp <- tempfile()
 createMockProject(tmp)
 
@@ -15,7 +15,7 @@ first_version <- as.integer(Sys.time())
 test_that("basic upload sequence works correctly", {
     f <- list.files(tmp, recursive=TRUE)
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", first_version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", first_version)
     info <- initializeUpload(tmp, f, start.url, expires=1)
 
     parsed <- httr::content(info)
@@ -50,7 +50,7 @@ test_that("md5-linked uploads work correctly (valid)", {
     expect_true(length(mlinks) > 1)
     remaining <- f[-linkable]
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
@@ -85,14 +85,14 @@ test_that("md5-linked uploads fail correctly (mismatch)", {
     expect_true(length(mlinks) > 1)
     remaining <- f[-linkable]
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
     expect_true(length(parsed$links) == 0L)
 
-    # abortUpload(example_url, parsed)
+    abortUpload(example.url, parsed)
 })
 
 test_that("md5-linked uploads fail correctly (missing files)", {
@@ -111,14 +111,14 @@ test_that("md5-linked uploads fail correctly (missing files)", {
     mlinks <- create_md5_links(tmp2, f[linkable])
     expect_true(length(mlinks) > 0)
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
     expect_true(length(parsed$links) == 0L)
 
-    # abortUpload(example_url, parsed)
+    abortUpload(example.url, parsed)
 })
 
 test_that("md5-linked uploads fail correctly (missing project)", {
@@ -132,12 +132,14 @@ test_that("md5-linked uploads fail correctly (missing project)", {
     remaining <- f[-linkable]
 
     # Creating a whole other version.
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload2", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload2", version)
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
     expect_true(all(f %in% names(parsed$presigned_urls)))
     expect_true(length(parsed$links) == 0L)
+
+    abortUpload(example.url, parsed)
 })
 
 test_that("manually linked uploads work correctly", {
@@ -153,7 +155,7 @@ test_that("manually linked uploads work correctly", {
     expect_true(length(alinks) > 1)
     remaining <- f[-linkable]
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
@@ -166,7 +168,7 @@ test_that("manually linked uploads work correctly", {
     # Confirm that a link exists in the metadata.
     res <- getFileMetadata(paste0("test-zircon-upload:blah.txt@", version), url=example.url)
     expect_identical(res$path, "blah.txt")
-    linked <- res[["_extra"]][["link"]][["id"]]
+    linked <- res[["_extra"]][["link"]][["artifactdb"]]
     expect_type(linked, "character")
     expect_identical(unpackID(linked)$version, "base")
 
@@ -188,9 +190,8 @@ test_that("manually linked uploads fail for expirable projects", {
     expect_true(length(alinks) > 1)
     remaining <- f[-linkable]
 
-    start.url <- createUploadStartUrl(example.url, "test-zircon-upload", version)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     expect_error(initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1), "transient")
 })
 
-identityAvailable(olda)
-identityHeaders(oldh)
+fun() # resetting identities at the end.
