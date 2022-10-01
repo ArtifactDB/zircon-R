@@ -1,6 +1,3 @@
-#example.project2 <- "test-zircon-more"
-example.project2 <- "test-zircon-upload"
-
 setGithubIdentities <- function() {
     token <- Sys.getenv("GITHUB_TOKEN", NA)
     if (is.na(token)) {

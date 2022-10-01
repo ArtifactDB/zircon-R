@@ -14,12 +14,19 @@ test_that("permissions getters work correctly", {
     expect_identical(out$scope, "project")
 })
 
+test_that("permissions getters fail correctly", {
+    # This project is private and should not have access granted to anonymous users.
+    expect_error(getPermissions("test-zircon-permissions", example.url), "does not have access")
+})
+
 test_that("permissions setters work correctly", {
     fun <- setGithubIdentities()
     if (is.null(fun)) {
         skip("no credentials for testing permission setting")
     }
     on.exit(fun())
+
+    example.project2 <- "test-zircon-permissions"
 
     setPermissions(example.project2, example.url, public=FALSE, viewers="lawremi", action="append")
     Sys.sleep(3) # Wait for async propagation.
