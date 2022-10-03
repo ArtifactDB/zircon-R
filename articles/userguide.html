@@ -213,7 +213,7 @@ as the redirection can change upon creation of a new version of the
 project. Developers may wish to resolve the <code>"latest"</code> alias
 to ensure that the actual version is recorded in their applications.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">resolveLatestID</span><span class="op">(</span><span class="va">id2</span>, <span class="va">example.url</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/resolveLatestVersion.html">resolveLatestID</a></span><span class="op">(</span><span class="va">id2</span>, <span class="va">example.url</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "test-zircon-upload:blah.txt@base"</span></span></code></pre>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/resolveLatestVersion.html">resolveLatestVersion</a></span><span class="op">(</span><span class="va">unpacked</span><span class="op">$</span><span class="va">project</span>, <span class="va">example.url</span><span class="op">)</span></span></code></pre></div>
@@ -326,13 +326,13 @@ the API.</p>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmppFblWG/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmpC1LzuK/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># cache hit (for the file and its metadata), same file path reported:</span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## cache hit!</span></span>
 <span><span class="co">## cache hit!</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "/tmp/RtmppFblWG/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmpC1LzuK/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
 <p>Note that this mechanism will automatically resolve any
 <code>latest</code> aliases in the supplied identifiers. This avoids
 problems with stale caches after updating the project versions.</p>

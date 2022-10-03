@@ -206,8 +206,9 @@ If such files are found, the backend will automatically create a link to that fi
 <p>The second mechanism in <code>dedup.link</code> is more explicit, relying on the uploader to supply the ArtifactDB identifier of the existing file to be linked to.
 This involves a bit more work as it requires the uploader to keep track of the duplication.
 However, it is also more powerful than the MD5-based method as it can be used to link files across different projects.</p>
-<p>Developers can check that the links (especially those from <code>dedup.md5</code>) were created by inspecting the <code>contents</code> of the <code>initializeUpload</code> output.
-If the to-be-linked file appears in the <code>links</code> field, the link was created; otherwise, the file must be uploaded via the <code>presigned_urls</code>.</p>
+<p>Developers can check whether links were successfully created by inspecting the <code><a href="https://httr.r-lib.org/reference/content.html" class="external-link">content</a></code> of the <code>initializeUpload</code> output.
+If the to-be-linked file appears in the <code>links</code> field, the link was created; otherwise, the file must be uploaded via the <code>presigned_urls</code>.
+This is useful for double-checking that the MD5 sums were correctly recognized by the API.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
