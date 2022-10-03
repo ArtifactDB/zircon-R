@@ -121,8 +121,9 @@ The second mechanism in \code{dedup.link} is more explicit, relying on the uploa
 This involves a bit more work as it requires the uploader to keep track of the duplication.
 However, it is also more powerful than the MD5-based method as it can be used to link files across different projects.
 
-Developers can check that the links (especially those from \code{dedup.md5}) were created by inspecting the \code{\link{contents}} of the \code{initializeUpload} output.
+Developers can check whether links were successfully created by inspecting the \code{\link{content}} of the \code{initializeUpload} output.
 If the to-be-linked file appears in the \code{links} field, the link was created; otherwise, the file must be uploaded via the \code{presigned_urls}.
+This is useful for double-checking that the MD5 sums were correctly recognized by the API.
 }
 
 \examples{

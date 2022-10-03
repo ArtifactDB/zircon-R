@@ -30,6 +30,7 @@ resolveLatestVersion <- function(project, url) {
 }
 
 #' @export
+#' @rdname resolveLatestVersion
 resolveLatestID <- function(id, url) {
     if (endsWith(id, "@latest")) {
         unpacked <- unpackID(id)

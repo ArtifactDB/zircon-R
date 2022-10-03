@@ -25,7 +25,7 @@ listProjects(example.url, number = 10)
 
 }
 \seealso{
-\code{\link{listProjectVersions}}, to obtain a listing of all projects.
+\code{\link{listProjectVersions}}, to obtain a listing of one project's versions.
 }
 \author{
 Aaron Lun

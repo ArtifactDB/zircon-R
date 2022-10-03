@@ -71,7 +71,7 @@ test_that("file getters work correctly with the latest alias", {
     repack <- do.call(packID, unpack)
 
     latest <- getFile(repack, example.url)
-    expect_identical(readLines(X), LETTERS)
+    expect_identical(readLines(latest), LETTERS)
 
     # Doesn't cache it under a 'latest' key.
     cached <- getFile(repack, example.url, cache = cacheTemporary)

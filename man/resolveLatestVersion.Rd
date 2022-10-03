@@ -2,9 +2,12 @@
 % Please edit documentation in R/resolveLatest.R
 \name{resolveLatestVersion}
 \alias{resolveLatestVersion}
+\alias{resolveLatestID}
 \title{Resolve the latest version}
 \usage{
 resolveLatestVersion(project, url)
+
+resolveLatestID(id, url)
 }
 \arguments{
 \item{project}{String containing the project identifier.}

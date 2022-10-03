@@ -32,6 +32,8 @@ If \code{NULL}, no caching is performed.}
 
 \item{follow.links}{Logical scalar indicating whether to search for links to duplicate files, see Details.}
 
+\item{user.agent}{String containing the user agent, see \code{\link{authorizedVerb}}.}
+
 \item{expiry}{Integer scalar specifying the time until expiry of the link, in seconds.
 Defaults to 120 if \code{NULL}; maximum value is 86400 (24 hours).}
 }

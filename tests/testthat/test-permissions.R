@@ -28,16 +28,16 @@ test_that("permissions setters work correctly", {
 
     example.project2 <- "test-zircon-permissions"
 
-    setPermissions(example.project2, example.url, public=FALSE, viewers="lawremi", action="append")
+    setPermissions(example.project2, example.url, public=TRUE, viewers="lawremi", action="append")
     Sys.sleep(3) # Wait for async propagation.
     out <- getPermissions(example.project2, example.url)
-    expect_identical(out$read_access, "viewers")
+    expect_identical(out$read_access, "public")
     expect_true("lawremi" %in% out$viewers)
 
-    setPermissions(example.project2, example.url, public=TRUE, viewers="lawremi", action="remove")
+    setPermissions(example.project2, example.url, public=FALSE, viewers="lawremi", action="remove")
     Sys.sleep(3) # Again, wait for async propagation.
     out <- getPermissions(example.project2, example.url)
-    expect_identical(out$read_access, "public")
+    expect_identical(out$read_access, "viewers")
     expect_false("lawremi" %in% out$viewers)
 })
 

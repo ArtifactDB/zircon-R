@@ -14,6 +14,7 @@
 #' @param cache Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 #' If \code{NULL}, no caching is performed.
 #' @param follow.links Logical scalar indicating whether to search for links to duplicate files, see Details.
+#' @param user.agent String containing the user agent, see \code{\link{authorizedVerb}}.
 #'
 #' @return
 #' For \code{getFileURL}, a string containing a URL that can be used to download the specified file.
