@@ -121,11 +121,26 @@ initializeUpload <- function(dir, files, start.url, dedup.md5=NULL, dedup.md5.fi
     stopifnot(length(intersect(files, names(dedup.md5)))==0L)
     stopifnot(length(intersect(names(dedup.link), names(dedup.md5)))==0L)
 
+    # Extracting and/or computing MD5 for integrity.
     files <- as.list(files)
-    for (f in files) {
-        .check_file_size(dir, f)
+    for (f in seq_along(files)) {
+        fname <- files[[f]]
+        .check_file_size(dir, fname)
+        md5 <- NULL
+        if (!endsWith(fname, ".json")) {
+            meta.path <- file.path(dir, paste0(fname, ".json"))
+            if (file.exists(meta.path)) {
+                md5 <- fromJSON(meta.path)$md5sum
+            }
+        }
+        if (is.null(md5)) {
+            # This should only be necessary for the metadata documents.
+            md5 <- digest::digest(file=file.path(dir, fname))
+        }
+        files[[f]] <- list(filename=fname, check="simple", value=list(md5sum=md5))
     }
 
+    # MD5 for deduplication.
     md5.files <- vector("list", length(dedup.md5))
     for (i in seq_along(md5.files)) {
         stopifnot(!is.null(dedup.md5.field))
@@ -182,7 +197,7 @@ createUploadStartURL <- function(url, project, version) {
 
 #' @export
 #' @rdname upload-utils
-#' @importFrom httr PUT stop_for_status
+#' @importFrom httr PUT stop_for_status upload_file add_headers
 uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     dedup.urls <- .parse_initial(initial)$links
     for (d in names(dedup.urls)) {
@@ -197,21 +212,21 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     # Looping through all files and uploading them. Each upload undergoes several 
     # attempts to be robust to connection loss or timeouts.
     up.urls <- initial$presigned_urls
-    for (g in names(up.urls)) {
-        up.url <- up.urls[[g]]
+    for (g in seq_along(up.urls)) {
+        current <- up.urls[[g]]
+        up.url <- current$url
+        up.md5 <- current$md5sum
+        up.path <- current$filename
         failed <- TRUE
 
-        if (!is.null(up.url)) {
-            for (i in seq_len(attempts)) {
-                # Why doesn't httr::PUT work? I DON'T KNOW!
-                out <- curl::curl_upload(file.path(dir, g), up.url, useragent=.raw_user_agent(), verbose=FALSE)
-                if (out$status_code < 300) {
-                    failed <- FALSE
-                    break
-                }
-                # Try again after some time, maybe it's feeling better.
-                Sys.sleep(60)
+        for (i in seq_len(attempts)) {
+            out <- PUT(up.url, body=upload_file(file.path(dir, up.path)), .user_agent(user.agent), add_headers(`Content-MD5`=up.md5))
+            if (out$status_code < 300) {
+                failed <- FALSE
+                break
             }
+            # Try again after some time, maybe it's feeling better.
+            Sys.sleep(60)
         }
 
         if (failed) {
