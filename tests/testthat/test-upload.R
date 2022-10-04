@@ -11,6 +11,8 @@ source(src)
 tmp <- tempfile()
 createMockProject(tmp)
 
+extract_filenames <- function(r) sort(vapply(r, function(x) x$filename, ""))
+
 first_version <- as.integer(Sys.time())
 test_that("basic upload sequence works correctly", {
     f <- list.files(tmp, recursive=TRUE)
@@ -19,7 +21,7 @@ test_that("basic upload sequence works correctly", {
     info <- initializeUpload(tmp, f, start.url, expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
 
     uploadFiles(tmp, example.url, parsed)
     comp <- completeUpload(example.url, parsed)
@@ -29,6 +31,25 @@ test_that("basic upload sequence works correctly", {
 
     contents <- getFile(paste0("test-zircon-upload:blah.txt@", first_version), url=example.url)
     expect_identical(readLines(contents), LETTERS)
+})
+
+test_that("basic upload sequence detects MD5 sum mismatch", {
+    Sys.sleep(1)
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
+    info <- initializeUpload(tmp, f, start.url, expires=1)
+
+    parsed <- httr::content(info)
+    expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
+
+    # Swapping files.
+    old <- parsed$presigned_urls[[1]]$filename
+    parsed$presigned_urls[[1]]$filename <- parsed$presigned_urls[[2]]$filename 
+    parsed$presigned_urls[[2]]$filename <- old
+
+    expect_error(uploadFiles(tmp, example.url, parsed, attempts=1), "failed.*MD5")
 })
 
 create_md5_links <- function(dir, to.link) {
@@ -54,8 +75,8 @@ test_that("md5-linked uploads work correctly (valid)", {
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f[linkable] %in% names(parsed$links)))
-    expect_true(all(remaining %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f[linkable]), extract_filenames(parsed$links))
+    expect_identical(sort(remaining), extract_filenames(parsed$presigned_urls))
 
     uploadFiles(tmp, example.url, parsed)
     comp <- completeUpload(example.url, parsed)
@@ -89,7 +110,7 @@ test_that("md5-linked uploads fail correctly (mismatch)", {
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
     expect_true(length(parsed$links) == 0L)
 
     abortUpload(example.url, parsed)
@@ -115,7 +136,7 @@ test_that("md5-linked uploads fail correctly (missing files)", {
     info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
     expect_true(length(parsed$links) == 0L)
 
     abortUpload(example.url, parsed)
@@ -136,7 +157,7 @@ test_that("md5-linked uploads fail correctly (missing project)", {
     info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
     expect_true(length(parsed$links) == 0L)
 
     abortUpload(example.url, parsed)
@@ -159,8 +180,8 @@ test_that("manually linked uploads work correctly", {
     info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1)
 
     parsed <- httr::content(info)
-    expect_true(all(f[linkable] %in% names(parsed$links)))
-    expect_true(all(remaining %in% names(parsed$presigned_urls)))
+    expect_identical(sort(f[linkable]), extract_filenames(parsed$links))
+    expect_identical(sort(remaining), extract_filenames(parsed$presigned_urls))
 
     uploadFiles(tmp, example.url, parsed)
     comp <- completeUpload(example.url, parsed)

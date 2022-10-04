@@ -149,9 +149,9 @@ initializeUpload <- function(dir, files, start.url, dedup.md5=NULL, dedup.md5.fi
         md5.files[[i]] <- list(filename=fname, check="md5", value=list(field=dedup.md5.field, md5sum=dedup.md5[[i]]))
     }
 
+    # Explicit links. No need to check the file size here, as we're not actually uploading it.
     link.files <- vector("list", length(dedup.link))
     for (i in seq_along(link.files)) {
-        # No need to check the file size here, as we're not actually uploading it.
         link.files[[i]] <- list(filename=names(dedup.link)[i], check="link", value=list(artifactdb_id=dedup.link[[i]]))
     }
 
@@ -197,15 +197,13 @@ createUploadStartURL <- function(url, project, version) {
 
 #' @export
 #' @rdname upload-utils
-#' @importFrom httr PUT stop_for_status upload_file add_headers
+#' @importFrom httr PUT stop_for_status upload_file add_headers content
 uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     dedup.urls <- .parse_initial(initial)$links
-    for (d in names(dedup.urls)) {
+    for (d in seq_along(dedup.urls)) {
         current <- dedup.urls[[d]]
-        if (!startsWith(current, "http")) {
-            current <- paste0(url, "/", current)
-        }
-        out <- .follow_redirects_faithfully(PUT, current, user.agent=user.agent)
+        endpoint <- paste0(url, "/", current$url)
+        out <- .follow_redirects_faithfully(PUT, endpoint, user.agent=user.agent)
         checkResponse(out)
     } 
 
@@ -218,6 +216,7 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
         up.md5 <- current$md5sum
         up.path <- current$filename
         failed <- TRUE
+        msg <- NULL
 
         for (i in seq_len(attempts)) {
             out <- PUT(up.url, body=upload_file(file.path(dir, up.path)), .user_agent(user.agent), add_headers(`Content-MD5`=up.md5))
@@ -225,12 +224,20 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
                 failed <- FALSE
                 break
             }
-            # Try again after some time, maybe it's feeling better.
-            Sys.sleep(60)
+
+            msg <- try(content(out, as="text", encoding="UTF-8"))
+            if (i < attempts) {
+                # Try again after some time, maybe it's feeling better.
+                Sys.sleep(60)
+            }
         }
 
         if (failed) {
-            stop("failed to upload ", g)
+            err <- paste0("failed to upload '", up.path, "'")
+            if (!is.null(msg) && !is(msg, "try-error")) {
+                err <- paste0(err, ":\n", msg)
+            }
+            stop(err)
         } 
     }
 }
