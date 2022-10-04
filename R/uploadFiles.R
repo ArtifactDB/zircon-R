@@ -121,11 +121,26 @@ initializeUpload <- function(dir, files, start.url, dedup.md5=NULL, dedup.md5.fi
     stopifnot(length(intersect(files, names(dedup.md5)))==0L)
     stopifnot(length(intersect(names(dedup.link), names(dedup.md5)))==0L)
 
+    # Extracting and/or computing MD5 for integrity.
     files <- as.list(files)
-    for (f in files) {
-        .check_file_size(dir, f)
+    for (f in seq_along(files)) {
+        fname <- files[[f]]
+        .check_file_size(dir, fname)
+        md5 <- NULL
+        if (!endsWith(fname, ".json")) {
+            meta.path <- file.path(dir, paste0(fname, ".json"))
+            if (file.exists(meta.path)) {
+                md5 <- fromJSON(meta.path)$md5sum
+            }
+        }
+        if (is.null(md5)) {
+            # This should only be necessary for the metadata documents.
+            md5 <- digest::digest(file=file.path(dir, fname))
+        }
+        files[[f]] <- list(filename=fname, check="simple", value=list(md5sum=md5))
     }
 
+    # MD5 for deduplication.
     md5.files <- vector("list", length(dedup.md5))
     for (i in seq_along(md5.files)) {
         stopifnot(!is.null(dedup.md5.field))
@@ -134,9 +149,9 @@ initializeUpload <- function(dir, files, start.url, dedup.md5=NULL, dedup.md5.fi
         md5.files[[i]] <- list(filename=fname, check="md5", value=list(field=dedup.md5.field, md5sum=dedup.md5[[i]]))
     }
 
+    # Explicit links. No need to check the file size here, as we're not actually uploading it.
     link.files <- vector("list", length(dedup.link))
     for (i in seq_along(link.files)) {
-        # No need to check the file size here, as we're not actually uploading it.
         link.files[[i]] <- list(filename=names(dedup.link)[i], check="link", value=list(artifactdb_id=dedup.link[[i]]))
     }
 
@@ -182,40 +197,47 @@ createUploadStartURL <- function(url, project, version) {
 
 #' @export
 #' @rdname upload-utils
-#' @importFrom httr PUT stop_for_status
+#' @importFrom httr PUT stop_for_status upload_file add_headers content
 uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     dedup.urls <- .parse_initial(initial)$links
-    for (d in names(dedup.urls)) {
+    for (d in seq_along(dedup.urls)) {
         current <- dedup.urls[[d]]
-        if (!startsWith(current, "http")) {
-            current <- paste0(url, "/", current)
-        }
-        out <- .follow_redirects_faithfully(PUT, current, user.agent=user.agent)
+        endpoint <- paste0(url, "/", current$url)
+        out <- .follow_redirects_faithfully(PUT, endpoint, user.agent=user.agent)
         checkResponse(out)
     } 
 
     # Looping through all files and uploading them. Each upload undergoes several 
     # attempts to be robust to connection loss or timeouts.
     up.urls <- initial$presigned_urls
-    for (g in names(up.urls)) {
-        up.url <- up.urls[[g]]
+    for (g in seq_along(up.urls)) {
+        current <- up.urls[[g]]
+        up.url <- current$url
+        up.md5 <- current$md5sum
+        up.path <- current$filename
         failed <- TRUE
+        msg <- NULL
 
-        if (!is.null(up.url)) {
-            for (i in seq_len(attempts)) {
-                # Why doesn't httr::PUT work? I DON'T KNOW!
-                out <- curl::curl_upload(file.path(dir, g), up.url, useragent=.raw_user_agent(), verbose=FALSE)
-                if (out$status_code < 300) {
-                    failed <- FALSE
-                    break
-                }
+        for (i in seq_len(attempts)) {
+            out <- PUT(up.url, body=upload_file(file.path(dir, up.path)), .user_agent(user.agent), add_headers(`Content-MD5`=up.md5))
+            if (out$status_code < 300) {
+                failed <- FALSE
+                break
+            }
+
+            msg <- try(content(out, as="text", encoding="UTF-8"))
+            if (i < attempts) {
                 # Try again after some time, maybe it's feeling better.
                 Sys.sleep(60)
             }
         }
 
         if (failed) {
-            stop("failed to upload ", g)
+            err <- paste0("failed to upload '", up.path, "'")
+            if (!is.null(msg) && !is(msg, "try-error")) {
+                err <- paste0(err, ":\n", msg)
+            }
+            stop(err)
         } 
     }
 }
