@@ -12,8 +12,8 @@ initializeUpload(
   dir,
   files,
   start.url,
-  dedup.md5 = NULL,
-  dedup.md5.field = NULL,
+  dedup.md5 = FALSE,
+  md5.field = "md5sum",
   dedup.link = NULL,
   expires = NULL,
   user.agent = NULL
@@ -43,12 +43,9 @@ These should be relative to \code{dir}.}
 
 \item{start.url}{String containing the URL to the upload endpoint.}
 
-\item{dedup.md5}{Named character vector containing the MD5 sums of files that are potentially duplicated in the ArtifactDB backend.
-Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be its MD5 sum.
-Names should not overlap with entries in \code{files}.}
+\item{dedup.md5}{Logical scalar indicating whether to create links for duplicate files across versions, see Details.}
 
-\item{dedup.md5.field}{String specifying the name of the metadata field containing the MD5 sum in existing ArtifactDB entries.
-Must be specified if \code{dedup.md5} is used.}
+\item{md5.field}{String specifying the field containing the MD5 checksums.}
 
 \item{dedup.link}{Named character vector specifying which files are duplicates of resources in existing ArtifactDB IDs. 
 Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be the existing ArtifactDB ID.
@@ -113,8 +110,8 @@ ArtifactDB instances are capable of creating links to represent identical files,
 This avoids the need to explicitly store a duplicate copy of a file in another project or version.
 It is particularly useful when dealing with new project versions where only a subset of files have changed.
 
-The first deduplication mechanism is implicit and based on the MD5 checksum in \code{dedup.md5}.
-When used in \code{initializeUpload}, the ArtifactDB backend will check the most recent previous version of the project (if any exists) for files with the same path and checksum.
+The first deduplication mechanism is implicit and based on the MD5 checksums of the uploaded (non-metadata) files. 
+When \code{dedup.md5.field} is specified, the ArtifactDB backend will check the most recent previous version of the project (if any exists) for files with the same path and checksum.
 If such files are found, the backend will automatically create a link to that file in the previous version, avoiding the need to upload a new copy in \code{uploadFiles}.
 
 The second mechanism in \code{dedup.link} is more explicit, relying on the uploader to supply the ArtifactDB identifier of the existing file to be linked to.

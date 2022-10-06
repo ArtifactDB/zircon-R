@@ -52,14 +52,6 @@ test_that("basic upload sequence detects MD5 sum mismatch", {
     expect_error(uploadFiles(tmp, example.url, parsed, attempts=1), "failed.*MD5")
 })
 
-create_md5_links <- function(dir, to.link) {
-    mlinks <- list()
-    for (x in to.link) {
-        mlinks[[x]] <- jsonlite::fromJSON(file.path(dir, paste0(x, ".json")))$md5sum
-    }
-    return(mlinks)
-}
-
 test_that("md5-linked uploads work correctly (valid)", {
     # Creating another version now. This assumes that we can piggy-back off the base version.
     Sys.sleep(1)
@@ -67,14 +59,13 @@ test_that("md5-linked uploads work correctly (valid)", {
 
     f <- list.files(tmp, recursive=TRUE)
     linkable <- which(!grepl(".json$", f))
-    mlinks <- create_md5_links(tmp, f[linkable])
-    expect_true(length(mlinks) > 1)
-    remaining <- f[-linkable]
+    expect_true(length(linkable) > 1)
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
+    info <- initializeUpload(tmp, f, start.url, auto.dedup.md5=TRUE, expires=1)
 
     parsed <- httr::content(info)
+    remaining <- f[-linkable]
     expect_identical(sort(f[linkable]), extract_filenames(parsed$links))
     expect_identical(sort(remaining), extract_filenames(parsed$presigned_urls))
 
@@ -107,7 +98,7 @@ test_that("md5-linked uploads fail correctly (mismatch)", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, expires=1)
 
     parsed <- httr::content(info)
     expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
@@ -128,12 +119,8 @@ test_that("md5-linked uploads fail correctly (missing files)", {
     file.copy(file.path(tmp, "whee.txt.json"), file.path(tmp2, "aaa.txt.json"))
 
     f <- list.files(tmp2, recursive=TRUE)
-    linkable <- which(!grepl(".json$", f))
-    mlinks <- create_md5_links(tmp2, f[linkable])
-    expect_true(length(mlinks) > 0)
-
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp2, f[-linkable], start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
+    info <- initializeUpload(tmp2, f, start.url, auto.dedup.md5=TRUE, expires=1)
 
     parsed <- httr::content(info)
     expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
@@ -147,14 +134,10 @@ test_that("md5-linked uploads fail correctly (missing project)", {
     version <- as.integer(Sys.time()) 
 
     f <- list.files(tmp, recursive=TRUE)
-    linkable <- which(!grepl(".json$", f))
-    mlinks <- create_md5_links(tmp, f[linkable])
-    expect_true(length(mlinks) > 1)
-    remaining <- f[-linkable]
 
     # Creating a whole other version.
     start.url <- createUploadStartURL(example.url, "test-zircon-upload2", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.md5=mlinks, dedup.md5.field="md5sum", expires=1)
+    info <- initializeUpload(tmp, f, start.url, auto.dedup.md5=TRUE, expires=1)
 
     parsed <- httr::content(info)
     expect_identical(sort(f), extract_filenames(parsed$presigned_urls))
@@ -177,7 +160,7 @@ test_that("manually linked uploads work correctly", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1)
+    info <- initializeUpload(tmp, remaining, start.url, dedup.link=alinks, expires=1)
 
     parsed <- httr::content(info)
     expect_identical(sort(f[linkable]), extract_filenames(parsed$links))
@@ -212,7 +195,7 @@ test_that("manually linked uploads fail for expirable projects", {
     remaining <- f[-linkable]
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    expect_error(initializeUpload(tmp, remaining, start.url, dedup.link=alinks, dedup.md5.field="md5sum", expires=1), "transient")
+    expect_error(initializeUpload(tmp, remaining, start.url, dedup.link=alinks, expires=1), "transient")
 })
 
 fun() # resetting identities at the end.
