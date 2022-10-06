@@ -58,8 +58,9 @@
 <span>  <span class="va">dir</span>,</span>
 <span>  <span class="va">files</span>,</span>
 <span>  <span class="va">start.url</span>,</span>
+<span>  auto.dedup.md5 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  dedup.md5 <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  dedup.md5.field <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  md5.field <span class="op">=</span> <span class="st">"md5sum"</span>,</span>
 <span>  dedup.link <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  expires <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  user.agent <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -97,15 +98,18 @@ These should be relative to <code>dir</code>.</p></dd>
 <dd><p>String containing the URL to the upload endpoint.</p></dd>
 
 
+<dt>auto.dedup.md5</dt>
+<dd><p>Logical scalar indicating whether to check <code>files</code> for duplicates across versions based on their MD5 checksums, see Details.</p></dd>
+
+
 <dt>dedup.md5</dt>
 <dd><p>Named character vector containing the MD5 sums of files that are potentially duplicated in the ArtifactDB backend.
 Each name in the vector should be a relative path to a file in <code>dir</code>, while each value of the vector should be its MD5 sum.
 Names should not overlap with entries in <code>files</code>.</p></dd>
 
 
-<dt>dedup.md5.field</dt>
-<dd><p>String specifying the name of the metadata field containing the MD5 sum in existing ArtifactDB entries.
-Must be specified if <code>dedup.md5</code> is used.</p></dd>
+<dt>md5.field</dt>
+<dd><p>String specifying the field containing the MD5 checksums.</p></dd>
 
 
 <dt>dedup.link</dt>
@@ -200,9 +204,10 @@ Project versions created with <code>expires</code> will be automatically removed
 <p>ArtifactDB instances are capable of creating links to represent identical files, similar to symbolic links on a typical file system.
 This avoids the need to explicitly store a duplicate copy of a file in another project or version.
 It is particularly useful when dealing with new project versions where only a subset of files have changed.</p>
-<p>The first deduplication mechanism is implicit and based on the MD5 checksum in <code>dedup.md5</code>.
-When used in <code>initializeUpload</code>, the ArtifactDB backend will check the most recent previous version of the project (if any exists) for files with the same path and checksum.
-If such files are found, the backend will automatically create a link to that file in the previous version, avoiding the need to upload a new copy in <code>uploadFiles</code>.</p>
+<p>The first deduplication mechanism is implicit and based on the MD5 checksums of the uploaded (non-metadata) files. 
+When <code>auto.dedup.md5=TRUE</code> or <code>dedup.md5</code> is supplied, the ArtifactDB backend will check the most recent previous version of the project (if any exists) for files with the same path and checksum.
+If such files are found, the backend will automatically create a link to that file in the previous version, avoiding the need to upload a new copy in <code>uploadFiles</code>.
+<code>auto.dedup.md5</code> will extract/compute the MD5 checksums from <code>files</code>, while <code>dedup.md5</code> allows users to specify the MD5 checksum per file manually if this is so desired.</p>
 <p>The second mechanism in <code>dedup.link</code> is more explicit, relying on the uploader to supply the ArtifactDB identifier of the existing file to be linked to.
 This involves a bit more work as it requires the uploader to keep track of the duplication.
 However, it is also more powerful than the MD5-based method as it can be used to link files across different projects.</p>
