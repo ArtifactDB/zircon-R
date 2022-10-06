@@ -40,7 +40,7 @@ uploadProject <- function(dir, url, project, version, files = list.files(dir, re
     success <- FALSE
     info <- initializeUpload(dir, files, start.url, ..., user.agent=user.agent)
 
-    parsed <- content(info, simplifyVector=TRUE, simplifyMatrix=TRUE, simplifyDataFrame=TRUE)
+    parsed <- content(info, simplifyVector=TRUE, simplifyMatrix=FALSE, simplifyDataFrame=FALSE)
     on.exit(if (!success) abortUpload(url, parsed, user.agent=user.agent))
 
     upload.args <- c(list(dir=dir, url=url, initial=parsed, user.agent=user.agent), upload.args)
