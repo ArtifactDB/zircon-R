@@ -106,16 +106,7 @@ getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agen
 }
 
 .get_original_linked_file <- function(id, url, cache, user.agent) {
-    # Don't try to set the cache.id to something constant, as the
-    # contents will not be the same for different 'id', and it will
-    # also be different between files and metadata. Just let the
-    # default happen with the url-based ID.
-    #
-    # We also set follow.links=FALSE to force it to take one link at a
-    # time, to ensure that we check for the presence of a cached file 
-    # for all IDs in the link chain. Otherwise we might skip one and
-    # be forced to unnecessarily download the file.
-    output <- try(getFileMetadata(id, url=url, cache=cache, follow.links=FALSE, user.agent=user.agent), silent=TRUE)
+    output <- try(getFileMetadata(id, url=url, cache=cache, follow.links=TRUE, user.agent=user.agent), silent=TRUE)
 
     endpoint <- .get_raw_file_url(id, url)
 

@@ -60,7 +60,7 @@
 #' @rdname getFileMetadata
 #' @importFrom httr GET content write_disk
 #' @importFrom jsonlite fromJSON
-getFileMetadata <- function(id, url, cache=NULL, follow.links=FALSE, user.agent=NULL) {
+getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
     if (!is.null(cache)) {
         id <- resolveLatestID(id, url)
     }
