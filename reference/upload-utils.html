@@ -109,7 +109,8 @@ Names should not overlap with entries in <code>files</code>.</p></dd>
 
 
 <dt>md5.field</dt>
-<dd><p>String specifying the field containing the MD5 checksums.</p></dd>
+<dd><p>String specifying the metadata field containing the MD5 checksums.
+If <code>NULL</code>, it is assumed that no such metadata field exists.</p></dd>
 
 
 <dt>dedup.link</dt>
@@ -197,6 +198,18 @@ Developers should ensure that <code><a href="authorizedVerb.html">identityHeader
 <p>Setting <code>expires</code> in <code>initializeUpload</code> is useful for testing the upload procedure without creating a permanent copy of the files.
 Project versions created with <code>expires</code> will be automatically removed after the expiry interval, freeing up space for real data.</p>
     </div>
+    <div id="metadata-documents-versus-file-artifacts">
+    <h2>Metadata documents versus file artifacts</h2>
+    
+
+<p>All files with names ending in <code>.json</code> are assumed to be metadata documents in JSON format.
+File artifacts should not have names ending with <code>.json</code>; any JSON-formatted artifacts should be renamed to avoid confusion.</p>
+<p>For each metadata document, the JSON object should contain a <code>path</code> property that specifies the file artifact corresponding to this metadata.
+In most cases, the file artifact should have a path equal to that of the metadata document after stripping the <code>.json</code> extension.
+The only exception is when the <code>path</code> points to the metadata document itself, for certain “metadata-only” artifacts that have no contents.</p>
+<p>For any metadata document that specifies a separate file artifact, it should also contain the MD5 checksum in the <code>md5.field</code>.
+This is used for integrity checks during upload and for potential deduplication (see below).</p>
+    </div>
     <div id="linking-to-duplicate-files">
     <h2>Linking to duplicate files</h2>
     
@@ -214,6 +227,8 @@ Linked files can either be specified directly via <code>dedup.link</code> or the
 <p>Developers can check whether links were successfully created by inspecting the <code><a href="https://httr.r-lib.org/reference/content.html" class="external-link">content</a></code> of the <code>initializeUpload</code> output.
 If the to-be-linked file appears in the <code>links</code> field, the link was created; otherwise, the file must be uploaded via the <code>presigned_urls</code>.
 This is useful for double-checking that the MD5 sums were correctly recognized by the API.</p>
+<p>Deduplication can only be performed for file artifacts, not for metadata documents ending with <code>.json</code>.
+Any attempt to deduplicate metadata will cause an error.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
