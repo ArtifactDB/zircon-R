@@ -47,6 +47,17 @@
 #'
 #' \code{createUploadStartUrl} will create the \dQuote{standard} upload URL to be used in \code{start.url}.
 #'
+#' @section Metadata documents versus file artifacts:
+#' All files with names ending in \code{.json} are assumed to be metadata documents in JSON format.
+#' File artifacts should not have names ending with \code{.json}; any JSON-formatted artifacts should be renamed to avoid confusion.
+#' 
+#' For each metadata document, the JSON object should contain a \code{path} property that specifies the file artifact corresponding to this metadata.
+#' In most cases, the file artifact should have a path equal to that of the metadata document after stripping the \code{.json} extension.
+#' The only exception is when the \code{path} points to the metadata document itself, for certain \dQuote{metadata-only} artifacts that have no contents.
+#'
+#' For any metadata document that specifies a separate file artifact, it should also contain the MD5 checksum in the \code{md5.field}.
+#' This is used for integrity checks during upload and for potential deduplication (see below).
+#' 
 #' @section Linking to duplicate files:
 #' ArtifactDB instances are capable of creating links to represent identical files, similar to symbolic links on a typical file system.
 #' This avoids the need to explicitly store a duplicate copy of a file in another project or version.
@@ -64,6 +75,9 @@
 #' Developers can check whether links were successfully created by inspecting the \code{\link{content}} of the \code{initializeUpload} output.
 #' If the to-be-linked file appears in the \code{links} field, the link was created; otherwise, the file must be uploaded via the \code{presigned_urls}.
 #' This is useful for double-checking that the MD5 sums were correctly recognized by the API. 
+#'
+#' Deduplication can only be performed for file artifacts, not for metadata documents ending with \code{.json}.
+#' Any attempt to deduplicate metadata will cause an error.
 #'
 #' @details
 #' Use of these utilities will almost always require appropriate authentication/authorization with the target API.
@@ -128,6 +142,9 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
     md5.files <- vector("list", length(dedup.md5))
     for (i in seq_along(md5.files)) {
         fname <- names(dedup.md5)[i]
+        if (endsWith(fname, ".json")) {
+            stop("cannot request MD5-based deduplication for metadata document '", fname, "'")
+        }
         .check_file_size(dir, fname)
         md5.files[[i]] <- list(filename=fname, check="md5", value=list(field=md5.field, md5sum=dedup.md5[[i]]))
     }
@@ -135,7 +152,11 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
     # Explicit links. No need to check the file size here, as we're not actually uploading it.
     link.files <- vector("list", length(dedup.link))
     for (i in seq_along(link.files)) {
-        link.files[[i]] <- list(filename=names(dedup.link)[i], check="link", value=list(artifactdb_id=dedup.link[[i]]))
+        fname <- names(dedup.link)[i]
+        if (endsWith(fname, ".json")) {
+            stop("cannot request link-based deduplication for metadata document '", fname, "'")
+        }
+        link.files[[i]] <- list(filename=fname, check="link", value=list(artifactdb_id=dedup.link[[i]]))
     }
 
     body <- list(
@@ -162,7 +183,11 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
 
     # Extracting the links.
     for (f in which(is.placeholder)) {
-        files[[f]] <- list(filename=files[[f]], check="link", value=list(artifactdb_id=.extract_link_id(link.targets[[f]])))
+        fname <- files[[f]]
+        if (endsWith(fname, ".json")) {
+            stop("cannot create links for metadata document '", fname, "'")
+        }
+        files[[f]] <- list(filename=fname, check="link", value=list(artifactdb_id=.extract_link_id(link.targets[[f]])))
     }
 
     # Extracting and/or computing MD5 for integrity and/or deduplication.

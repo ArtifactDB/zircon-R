@@ -33,3 +33,10 @@ test_that("symlinks are correctly detected on upload initialization", {
     expect_identical(formatted[[3]]$filename, "boo.txt")
     expect_identical(formatted[[3]]$value$artifactdb_id, example.id)
 })
+
+test_that("symlinks to metadata fail on upload initialization", {
+    tmp <- tempfile()
+    dir.create(tmp)
+    createPlaceholderLink(tmp, "boo.json", example.id)
+    expect_error(zircon:::.format_files(tmp, c("boo.json")), "cannot create link")
+})

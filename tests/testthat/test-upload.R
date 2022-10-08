@@ -83,6 +83,19 @@ test_that("md5-linked uploads work correctly (valid)", {
     expect_identical(readLines(contents), LETTERS)
 })
 
+test_that("md5-linked uploads fail correctly for JSON files", {
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    meta <- f[-linkable]
+    mlinks <- rep("FOO", length(meta))
+    names(mlinks) <- meta
+
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
+    expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.md5=mlinks, expires=1), "cannot request MD5-based deduplication")
+})
+
 test_that("md5-linked uploads fail correctly (mismatch)", {
     # Making sure we force a new upload if the md5sums don't match.
     Sys.sleep(1)
@@ -196,6 +209,19 @@ test_that("manually linked uploads fail for expirable projects", {
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     expect_error(initializeUpload(tmp, remaining, start.url, dedup.link=alinks, expires=1), "transient")
+})
+
+test_that("manually linked uploads fail correctly for JSON files", {
+    version <- as.integer(Sys.time()) 
+
+    f <- list.files(tmp, recursive=TRUE)
+    linkable <- which(!grepl(".json$", f))
+    meta <- f[-linkable]
+    links <- rep("FOO", length(meta))
+    names(links) <- meta
+
+    start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
+    expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.link=mlinks, expires=1), "cannot request link-based deduplication")
 })
 
 fun() # resetting identities at the end.

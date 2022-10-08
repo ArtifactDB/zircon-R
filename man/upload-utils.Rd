@@ -109,6 +109,19 @@ Developers should ensure that \code{\link{identityHeaders}} and friends are set 
 Setting \code{expires} in \code{initializeUpload} is useful for testing the upload procedure without creating a permanent copy of the files.
 Project versions created with \code{expires} will be automatically removed after the expiry interval, freeing up space for real data.
 }
+\section{Metadata documents versus file artifacts}{
+
+All files with names ending in \code{.json} are assumed to be metadata documents in JSON format.
+File artifacts should not have names ending with \code{.json}; any JSON-formatted artifacts should be renamed to avoid confusion.
+
+For each metadata document, the JSON object should contain a \code{path} property that specifies the file artifact corresponding to this metadata.
+In most cases, the file artifact should have a path equal to that of the metadata document after stripping the \code{.json} extension.
+The only exception is when the \code{path} points to the metadata document itself, for certain \dQuote{metadata-only} artifacts that have no contents.
+
+For any metadata document that specifies a separate file artifact, it should also contain the MD5 checksum in the \code{md5.field}.
+This is used for integrity checks during upload and for potential deduplication (see below).
+}
+
 \section{Linking to duplicate files}{
 
 ArtifactDB instances are capable of creating links to represent identical files, similar to symbolic links on a typical file system.
@@ -126,7 +139,10 @@ Linked files can either be specified directly via \code{dedup.link} or they can 
 
 Developers can check whether links were successfully created by inspecting the \code{\link{content}} of the \code{initializeUpload} output.
 If the to-be-linked file appears in the \code{links} field, the link was created; otherwise, the file must be uploaded via the \code{presigned_urls}.
-This is useful for double-checking that the MD5 sums were correctly recognized by the API.
+This is useful for double-checking that the MD5 sums were correctly recognized by the API. 
+
+Deduplication can only be performed for file artifacts, not for metadata documents ending with \code{.json}.
+Any attempt to deduplicate metadata will cause an error.
 }
 
 \examples{
