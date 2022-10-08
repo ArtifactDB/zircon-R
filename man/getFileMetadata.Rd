@@ -4,7 +4,7 @@
 \alias{getFileMetadata}
 \title{Retrieve a file or its metadata}
 \usage{
-getFileMetadata(id, url, cache = NULL, follow.links = FALSE, user.agent = NULL)
+getFileMetadata(id, url, cache = NULL, follow.links = TRUE, user.agent = NULL)
 }
 \arguments{
 \item{id}{String containing the ArtifactDB identifier for a file.
