@@ -41,6 +41,16 @@ test_that("file metadata getters work correctly with the latest alias", {
     expect_false(any(grepl("latest", list.files(tmp.cache))))
 })
 
+test_that("file metadata getters follow links (or not)", {
+    redirect <- getFileMetadata(packID("test-zircon-link", "redirect", "base"), example.url, follow.links=FALSE)
+    expect_identical(redirect[["$schema"]], "redirection/v1.json")
+    expect_match(redirect$redirection$targets[[1]]$location, "foo")
+
+    target <- getFileMetadata(packID("test-zircon-link", "redirect", "base"), example.url)
+    ref <- getFileMetadata(packID("test-zircon-link", redirect$redirection$targets[[1]]$location, "base"), example.url)
+    expect_identical(target, ref)
+})
+
 test_that("file getters work correctly", {
     X <- getFile(example.id, url = example.url)
     expect_identical(readLines(X), LETTERS)

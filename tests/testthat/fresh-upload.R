@@ -16,10 +16,14 @@ uploadProject(tmp, example.url, "test-zircon-upload", "base")
 uploadProject(tmp, example.url, "test-zircon-permissions", "base", permissions=list(read_access="viewers"))
 # setPermissions("test-zircon-permissions", example.url, public=FALSE)
 
-# Test project for links.
-f <- list.files(tmp, recursive=TRUE)
+# Test project for links and redirects.
+tmp2 <- tempfile()
+createMockProject(tmp2)
+createRedirection(tmp2, "redirect", "foo/bar.txt")
+
+f <- list.files(tmp2, recursive=TRUE)
 keep <- grepl(".json$", f)
 remaining <- f[keep]
 to_link <- f[!keep]
 nms <- packID("test-zircon-upload", to_link, "base")
-uploadProject(tmp, example.url, "test-zircon-link", "base", files=remaining, dedup.link=setNames(nms, to_link))
+uploadProject(tmp2, example.url, "test-zircon-link", "base", files=remaining, dedup.link=setNames(nms, to_link))

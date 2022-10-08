@@ -33,3 +33,23 @@ createMockProject <- function(dir) {
     fpath30 <- file.path(dir, rpath30)
     write(file=fpath30, jsonlite::toJSON(c(basic, list(md5sum=md5.3, path=rpath3)), auto_unbox=TRUE, pretty=TRUE))
 }
+
+createRedirection <- function (dir, src, dest) {
+    json <- paste0(src, ".json")
+    if (file.exists(file.path(dir, json))) {
+        stop("cannot create a short-hand link over existing file '", json, "'")
+    }
+
+    redirect <- list(
+        path = src, 
+        `$schema` = "redirection/v1.json", 
+        redirection = list(
+            targets = list(list(type = "local", location = dest))
+        )
+    )
+
+    write(
+        file=file.path(dir, paste0(src, ".json")),
+        jsonlite::toJSON(redirect, auto_unbox=TRUE, pretty=TRUE)
+    )
+}
