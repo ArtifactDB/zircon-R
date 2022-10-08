@@ -3,6 +3,7 @@
 export(abortUpload)
 export(authorizedVerb)
 export(checkResponse)
+export(cloneProjectVersion)
 export(completeUpload)
 export(createPlaceholderLink)
 export(createUploadStartURL)
