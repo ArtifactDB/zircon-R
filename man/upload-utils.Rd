@@ -50,7 +50,8 @@ These should be relative to \code{dir}.}
 Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be its MD5 sum.
 Names should not overlap with entries in \code{files}.}
 
-\item{md5.field}{String specifying the field containing the MD5 checksums.}
+\item{md5.field}{String specifying the metadata field containing the MD5 checksums.
+If \code{NULL}, it is assumed that no such metadata field exists.}
 
 \item{dedup.link}{Named character vector specifying which files are duplicates of resources in existing ArtifactDB IDs. 
 Each name in the vector should be a relative path to a file in \code{dir}, while each value of the vector should be the existing ArtifactDB ID.

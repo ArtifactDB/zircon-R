@@ -83,9 +83,10 @@ test_that("md5-linked uploads work correctly (valid)", {
     expect_identical(readLines(contents), LETTERS)
 })
 
-test_that("md5-linked uploads fail correctly for JSON files", {
+test_that("md5-linked uploads fail correctly (file types)", {
     version <- as.integer(Sys.time()) 
 
+    # For JSON files.
     f <- list.files(tmp, recursive=TRUE)
     linkable <- which(!grepl(".json$", f))
     meta <- f[-linkable]
@@ -94,6 +95,18 @@ test_that("md5-linked uploads fail correctly for JSON files", {
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
     expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.md5=mlinks, expires=1), "cannot request MD5-based deduplication")
+
+    # If MD5 is not supplied.
+    expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.md5=mlinks, md5.field=NULL, expires=1), "md5.field=NULL")
+
+    # Everything is skipped if the md5 field is not present.
+    formatted <- zircon:::.format_files(tmp, f, auto.dedup.md5=TRUE, md5.field="md5sum")
+    types <- vapply(formatted, function(x) x$check, "")
+    expect_identical(sort(unique(types)), c("md5", "simple"))
+
+    formatted <- zircon:::.format_files(tmp, f, auto.dedup.md5=TRUE, md5.field=NULL)
+    types <- vapply(formatted, function(x) x$check, "")
+    expect_identical(unique(types), "simple")
 })
 
 test_that("md5-linked uploads fail correctly (mismatch)", {
