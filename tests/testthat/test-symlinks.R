@@ -18,16 +18,18 @@ test_that("symlinks are correctly detected on upload initialization", {
     dir.create(tmp)
 
     write(file=file.path(tmp, "foo.json"), LETTERS)
+    file.symlink(system.file("scripts", "mock.R", package="zircon"), file.path(tmp, "mock.json"))
     createPlaceholderLink(tmp, "boo.txt", example.id)
-
-    formatted <- zircon:::.format_files(tmp, c("foo.json", "boo.txt"), auto.dedup.md5=FALSE, md5.field="md5sum")
+    formatted <- zircon:::.format_files(tmp, c("foo.json", "mock.json", "boo.txt"), auto.dedup.md5=FALSE, md5.field="md5sum")
 
     # Simple things work...
     expect_identical(formatted[[1]]$check, "simple")
     expect_identical(formatted[[1]]$filename, "foo.json")
+    expect_identical(formatted[[2]]$check, "simple")
+    expect_identical(formatted[[2]]$filename, "mock.json")
 
     # And so do the links.
-    expect_identical(formatted[[2]]$check, "link")
-    expect_identical(formatted[[2]]$filename, "boo.txt")
-    expect_identical(formatted[[2]]$value$artifactdb_id, example.id)
+    expect_identical(formatted[[3]]$check, "link")
+    expect_identical(formatted[[3]]$filename, "boo.txt")
+    expect_identical(formatted[[3]]$value$artifactdb_id, example.id)
 })

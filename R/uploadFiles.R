@@ -156,16 +156,17 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
 #' @importFrom jsonlite fromJSON
 .format_files <- function(dir, files, auto.dedup.md5, md5.field) {
     link.targets <- Sys.readlink(file.path(dir, files))
-    is.link <- link.targets != ""
+    is.placeholder <- link.targets != ""
+    is.placeholder[is.placeholder] <- !file.exists(link.targets[is.placeholder])
     files <- as.list(files)
 
     # Extracting the links.
-    for (f in which(is.link)) {
+    for (f in which(is.placeholder)) {
         files[[f]] <- list(filename=files[[f]], check="link", value=list(artifactdb_id=.extract_link_id(link.targets[[f]])))
     }
 
     # Extracting and/or computing MD5 for integrity and/or deduplication.
-    for (f in which(!is.link)) {
+    for (f in which(!is.placeholder)) {
         fname <- files[[f]]
         .check_file_size(dir, fname)
 

@@ -49,14 +49,14 @@ extractLinkedID <- function(dir, path) {
     if (link.target == "") {
         return(NULL)
     } else {
+        if (file.exists(link.target)) {
+            stop("placeholder should be a dangling symlink")
+        }
         .extract_link_id(link.target)
     }
 }
 
 #' @importFrom utils URLdecode
 .extract_link_id <- function(link.target) {
-    if (file.exists(link.target)) {
-        stop("placeholder should be a dangling symlink")
-    }
     URLdecode(sub(":.*", "", basename(link.target)))
 }
