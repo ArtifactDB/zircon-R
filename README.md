@@ -3,13 +3,14 @@
 The **zircon** package implements an R client for interacting with an ArtifactDB REST API.
 It provides methods for downloading files and metadata, inspecting project versions, and uploading project artifacts.
 Developers can customize caching and authentication according to their specific ArtifactDB instance.
+
 To get started, install the package and its dependencies from GitHub:
 
 ```r
 devtools::install_github("ArtifactDB/zircon-R")
 ```
 
-We'll use examples from the test ArtifactDB API to demonstrate:
+We'll use examples from the [**gypsum**](https://github.com/ArtifactDB/gypsum-worker) ArtifactDB API to demonstrate **zircon**'s functionality:
 
 ```r
 library(zircon)

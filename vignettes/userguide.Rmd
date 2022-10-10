@@ -4,7 +4,7 @@ author:
 - name: Aaron Lun
   email: infinite.monkeys.with.keyboards@gmail.com
 package: zircon
-date: "Revised: September 29, 2022"
+date: "Revised: October 10, 2022"
 output:
   BiocStyle::html_document
 vignette: >
@@ -155,7 +155,8 @@ Some of the more interesting upload options include:
 # Caching API responses
 
 Some of the getter functions can perform caching by providing an appropriate function to `cache=`. 
-This function should check if the key already exists in the cache - if it does, the path in the cached file can be used directly, otherwise it should be downloaded from the API.
+This function accepts a `key` string identifying the resource and a `save` function that downloads the resource.
+It should check if the key already exists in the cache - if it does, the path to the cached file can be returned directly, otherwise it should be downloaded from the API by running `save()`.
 
 ```{r}
 tmp.cache <- file.path(tempdir(), "zircon-cache")
@@ -179,12 +180,14 @@ getFile(example.id, example.url, cache = cache.fun)
 Note that this mechanism will automatically resolve any `latest` aliases in the supplied identifiers.
 This avoids problems with stale caches after updating the project versions.
 
-Application developers are strongly advised to use some kind of caching to reduce bandwidth and data egress costs.
+Users are strongly advised to use some kind of caching to reduce bandwidth and data egress costs.
+Check out the `biocCache()` function for one possible caching mechanism based on `r Biocpkg("BiocFileCache")`.
 
 # Customizing the authentication 
 
-Developers can globally specify the authentication procedure by through the `identityAvailable()` and `identityHeaders()` functions.
-To demonstrate, we'll be using GitHub personal access tokens:
+Users can globally specify the authentication procedure by through the `identityAvailable()` and `identityHeaders()` functions.
+To demonstrate, we'll be using GitHub personal access tokens to authenticate users based on GitHub's REST API.
+(Note that this is already implemented using the `useGitHubIdentities()` function, but we present a simplified version below for pedagogical purposes.)
 
 ```{r}
 .fetch_token_from_cache <- function(exists.only) {
@@ -231,6 +234,14 @@ identityHeaders(function() list(Authorization=paste("Bearer", .fetch_token_from_
 ```
 
 These headers will now be used in various `r self` functions to authenticate the user where necessary.
+
+# Recommendations for application developers
+
+While it is possible to use `r self` directly, it is often better to wrap `r self` in another package that handles the configuration for a particular **ArtifactDB** instance.
+At the bare minimum, the `url=` can be set to some sensible default for a given instance;
+developers can also provide appropriate defaults for caching and authentication.
+This streamlines the end user experience and reduces the potential for errors (e.g., if the user specifies the wrong URL) or inefficiencies (e.g., if the user forgets to set `cache=`). 
+Check out the `r Githubpkg("ArtifactDB/calcite-R", "calcite")` package for an example of a wrapper around `r self`.
 
 # Session information {-}
 
