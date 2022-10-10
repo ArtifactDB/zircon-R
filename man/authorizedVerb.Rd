@@ -62,6 +62,9 @@ out <- authorizedVerb(GET, url=URL2)
 try(.checkResponse(out))
 
 }
+\seealso{
+\code{\link{useGitHubIdentities}}, which sets up authorization based on GitHub personal access tokens.
+}
 \author{
 Aaron Lun
 }

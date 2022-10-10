@@ -29,6 +29,9 @@
 #' If this fails and \code{identityHeader} is available, it will repeat the request after calling \code{identityHeader} to create authentication headers.
 #' This process avoids burdening the user with authentication issues when requesting publicly available resources, falling back to some authentication process as required.
 #'
+#' @seealso
+#' \code{\link{useGitHubIdentities}}, which sets up authorization based on GitHub personal access tokens.
+#'
 #' @author Aaron Lun
 #' @examples
 #' library(httr)
