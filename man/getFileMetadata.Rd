@@ -40,6 +40,7 @@ It will perform the request to the AritfactDB REST API, save the response to the
 The caching function should call \code{save} with a suitable key-derived path if \code{key} does not already exist in the cache.
 }
 The caching function itself should return the path used in \code{save}.
+See \code{\link{biocCache}} for one possible implementation based on Bioconductor's \pkg{BiocFileCache} package.
 }
 \examples{
 # No caching:

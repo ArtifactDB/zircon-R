@@ -2,6 +2,7 @@
 
 export(abortUpload)
 export(authorizedVerb)
+export(biocCache)
 export(checkResponse)
 export(cloneProjectVersion)
 export(completeUpload)

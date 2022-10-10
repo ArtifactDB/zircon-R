@@ -18,6 +18,8 @@ Suggests:
     testthat,
     BiocStyle,
     curl,
-    digest
+    digest,
+    BiocFileCache,
+    filelock
 RoxygenNote: 7.2.1
 VignetteBuilder: knitr
