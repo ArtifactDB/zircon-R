@@ -72,10 +72,11 @@
 <div class="section level1">
 <div class="page-header"><h1 id="r-client-for-artifactdb">R client for ArtifactDB<a class="anchor" aria-label="anchor" href="#r-client-for-artifactdb"></a>
 </h1></div>
-<p>The <strong>zircon</strong> package implements an R client for interacting with an ArtifactDB REST API. It provides methods for downloading files and metadata, inspecting project versions, and uploading project artifacts. Developers can customize caching and authentication according to their specific ArtifactDB instance. To get started, install the package and its dependencies from GitHub:</p>
+<p>The <strong>zircon</strong> package implements an R client for interacting with an ArtifactDB REST API. It provides methods for downloading files and metadata, inspecting project versions, and uploading project artifacts. Developers can customize caching and authentication according to their specific ArtifactDB instance.</p>
+<p>To get started, install the package and its dependencies from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ArtifactDB/zircon-R"</span><span class="op">)</span></span></code></pre></div>
-<p>We’ll use examples from the test ArtifactDB API to demonstrate:</p>
+<p>We’ll use examples from the <a href="https://github.com/ArtifactDB/gypsum-worker" class="external-link"><strong>gypsum</strong></a> ArtifactDB API to demonstrate <strong>zircon</strong>’s functionality:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">zircon</span><span class="op">)</span></span>
 <span></span>

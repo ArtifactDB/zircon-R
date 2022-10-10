@@ -73,7 +73,7 @@
                   <a class="author_email" href="mailto:#"></a><a href="mailto:infinite.monkeys.with.keyboards@gmail.com" class="email">infinite.monkeys.with.keyboards@gmail.com</a>
       
                   
-            <h4 data-toc-skip class="date">Revised: September 29,
+            <h4 data-toc-skip class="date">Revised: October 10,
 2022</h4>
       
       
@@ -308,10 +308,12 @@ new projects with no previous versions (unless
 <h2 id="caching-api-responses">Caching API responses<a class="anchor" aria-label="anchor" href="#caching-api-responses"></a>
 </h2>
 <p>Some of the getter functions can perform caching by providing an
-appropriate function to <code>cache=</code>. This function should check
-if the key already exists in the cache - if it does, the path in the
-cached file can be used directly, otherwise it should be downloaded from
-the API.</p>
+appropriate function to <code>cache=</code>. This function accepts a
+<code>key</code> string identifying the resource and a <code>save</code>
+function that downloads the resource. It should check if the key already
+exists in the cache - if it does, the path to the cached file can be
+returned directly, otherwise it should be downloaded from the API by
+running <code><a href="https://rdrr.io/r/base/save.html" class="external-link">save()</a></code>.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tmp.cache</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"zircon-cache"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">tmp.cache</span><span class="op">)</span></span>
@@ -326,26 +328,30 @@ the API.</p>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpvDl5zm/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmpekvtjd/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># cache hit (for the file and its metadata), same file path reported:</span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## cache hit!</span></span>
 <span><span class="co">## cache hit!</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpvDl5zm/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmpekvtjd/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-zircon-upload%253Ablah.txt%2540base"</span></span></code></pre>
 <p>Note that this mechanism will automatically resolve any
 <code>latest</code> aliases in the supplied identifiers. This avoids
 problems with stale caches after updating the project versions.</p>
-<p>Application developers are strongly advised to use some kind of
-caching to reduce bandwidth and data egress costs.</p>
+<p>Users are strongly advised to use some kind of caching to reduce
+bandwidth and data egress costs. Check out the <code><a href="../reference/biocCache.html">biocCache()</a></code>
+function for one possible caching mechanism based on <em><a href="https://bioconductor.org/packages/3.16/BiocFileCache" class="external-link">BiocFileCache</a></em>.</p>
 </div>
 <div class="section level2">
 <h2 id="customizing-the-authentication">Customizing the authentication<a class="anchor" aria-label="anchor" href="#customizing-the-authentication"></a>
 </h2>
-<p>Developers can globally specify the authentication procedure by
-through the <code><a href="../reference/authorizedVerb.html">identityAvailable()</a></code> and
-<code><a href="../reference/authorizedVerb.html">identityHeaders()</a></code> functions. To demonstrate, we’ll be using
-GitHub personal access tokens:</p>
+<p>Users can globally specify the authentication procedure by through
+the <code><a href="../reference/authorizedVerb.html">identityAvailable()</a></code> and <code><a href="../reference/authorizedVerb.html">identityHeaders()</a></code>
+functions. To demonstrate, we’ll be using GitHub personal access tokens
+to authenticate users based on GitHub’s REST API. (Note that this is
+already implemented using the <code><a href="../reference/github.html">useGitHubIdentities()</a></code>
+function, but we present a simplified version below for pedagogical
+purposes.)</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">.fetch_token_from_cache</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">exists.only</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">dir</span> <span class="op">&lt;-</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">R_user_dir</a></span><span class="op">(</span><span class="st">"my_app_name"</span><span class="op">)</span></span>
@@ -388,6 +394,21 @@ to retrieve the token.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/authorizedVerb.html">identityHeaders</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Authorization<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Bearer"</span>, <span class="fu">.fetch_token_from_cache</span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>These headers will now be used in various <em><a href="https://github.com/ArtifactDB/zircon-R" class="external-link">zircon</a></em> functions
 to authenticate the user where necessary.</p>
+</div>
+<div class="section level2">
+<h2 id="recommendations-for-application-developers">Recommendations for application developers<a class="anchor" aria-label="anchor" href="#recommendations-for-application-developers"></a>
+</h2>
+<p>While it is possible to use <em><a href="https://github.com/ArtifactDB/zircon-R" class="external-link">zircon</a></em> directly,
+it is often better to wrap <em><a href="https://github.com/ArtifactDB/zircon-R" class="external-link">zircon</a></em> in another
+package that handles the configuration for a particular
+<strong>ArtifactDB</strong> instance. At the bare minimum, the
+<code>url=</code> can be set to some sensible default for a given
+instance; developers can also provide appropriate defaults for caching
+and authentication. This streamlines the end user experience and reduces
+the potential for errors (e.g., if the user specifies the wrong URL) or
+inefficiencies (e.g., if the user forgets to set <code>cache=</code>).
+Check out the <em><a href="https://github.com/ArtifactDB/calcite-R" class="external-link">calcite</a></em> package
+for an example of a wrapper around <em><a href="https://github.com/ArtifactDB/zircon-R" class="external-link">zircon</a></em>.</p>
 </div>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
