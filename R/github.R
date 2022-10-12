@@ -76,7 +76,9 @@ TOKEN: "
                 name <- content(res)$login
                 break
             }
-            token <- getPass("\nHmm... failed to verify this token with GitHub (status code ", res$status_code, "). Try again?\nTOKEN: ")
+
+            more.prompt <- paste0("\nHmm... failed to verify this token with GitHub (status code ", res$status_code, "). Try again?\nTOKEN: ")
+            token <- readline(more.prompt)
         }
 
         if (nchar(token) == 0) {
