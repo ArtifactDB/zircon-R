@@ -83,7 +83,7 @@
 <span><span class="va">example.url</span></span>
 <span><span class="co">## [1] "https://gypsum-test.aaron-lun.workers.dev"</span></span>
 <span><span class="va">example.id</span></span>
-<span><span class="co">## [1] "test-zircon-upload:blah.txt@base"</span></span>
+<span><span class="co">## [1] "test-public:blah.txt@base"</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="reference/getFileMetadata.html">getFileMetadata</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">## List of 5</span></span>
@@ -94,8 +94,8 @@
 <span><span class="co">##  $ path        : chr "blah.txt"</span></span>
 <span><span class="co">##  $ _extra      :List of 9</span></span>
 <span><span class="co">##   ..$ $schema      : chr "generic_file/v1.json"</span></span>
-<span><span class="co">##   ..$ id           : chr "test-zircon-upload:blah.txt@base"</span></span>
-<span><span class="co">##   ..$ project_id   : chr "test-zircon-upload"</span></span>
+<span><span class="co">##   ..$ id           : chr "test-public:blah.txt@base"</span></span>
+<span><span class="co">##   ..$ project_id   : chr "test-public"</span></span>
 <span><span class="co">##   ..$ version      : chr "base"</span></span>
 <span><span class="co">##   ..$ metapath     : chr "blah.txt"</span></span>
 <span><span class="co">##   ..$ meta_indexed : chr "2022-10-01T19:45:51.913Z"</span></span>
@@ -124,6 +124,7 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="va">src</span><span class="op">)</span></span>
 <span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">createMockProject</span><span class="op">(</span><span class="va">tmp</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="reference/uploadProject.html">uploadProject</a></span><span class="op">(</span><span class="va">tmp</span>, <span class="va">example.url</span>, <span class="st">"test-zircon-upload"</span>, <span class="st">"foobar"</span><span class="op">)</span></span></code></pre></div>
 <p>See the <a href="https://artifactdb.github.io/zircon-R/articles/userguide.html" class="external-link">user’s guide</a> for more details.</p>
 </div>
