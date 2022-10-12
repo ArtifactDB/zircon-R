@@ -30,7 +30,7 @@ test_that("file metadata getters work correctly with the latest alias", {
 
     latest <- getFileMetadata(repack, example.url)
     unpack2 <- unpackID(latest[["_extra"]][["id"]])
-    expect_false(unpack2$version == "latest")
+    expect_identical(unpack2$version, "modified")
 
     ref <- getFileMetadata(latest[["_extra"]][["id"]], example.url)
     expect_identical(ref, latest)
@@ -76,15 +76,16 @@ test_that("file getters work correctly with caching", {
 })
 
 test_that("file getters work correctly with the latest alias", {
-    unpack <- unpackID(example.id)
-    unpack$version <- "latest"
-    repack <- do.call(packID, unpack)
-
-    latest <- getFile(repack, example.url)
-    expect_identical(readLines(latest), LETTERS)
+    # Respects the differences in versions.
+    first <- readLines(getFile(packID(example.project, "whee.txt", example.version), example.url))
+    second <- readLines(getFile(packID(example.project, "whee.txt", "modified"), example.url))
+    aliased <- readLines(getFile(packID(example.project, "whee.txt", "latest"), example.url))
+    expect_identical(aliased, second)
+    expect_false(identical(aliased, first))
 
     # Doesn't cache it under a 'latest' key.
-    cached <- getFile(repack, example.url, cache = cacheTemporary)
+    cached <- getFile(packID(example.project, "blah.txt", "latest"), example.url, cache = cacheTemporary)
+    expect_true(grepl("modified", cached))
     expect_false(grepl("latest", cached))
 })
 
@@ -105,4 +106,26 @@ test_that("file getters follow links correctly", {
     expect_identical(cachedCounter$hits, 0L)
     base <- getFile(packID("test-public", "foo/bar.txt", "base"), example.url, cache=cacheTemporary)
     expect_true(cachedCounter$hits > 0L)
+})
+
+test_that("file getters fail on links to private resources", {
+    priv.id <- packID("test-links", "whee.txt", "private")
+
+    linked <- getFileMetadata(priv.id, example.url)
+    link.id <- linked[["_extra"]][["link"]][["artifactdb"]]
+    expect_identical(unpackID(link.id)$project, "test-private")
+
+    expect_error(getFile(priv.id, example.url), "credentials not supplied")
+})
+
+test_that("file getters work with private resources upon authorization", {
+    fun <- setGithubIdentities()
+    if (is.null(fun)) {
+        skip("no credentials for testing permission setting")
+    }
+    on.exit(fun())
+
+    priv.id <- packID("test-links", "whee.txt", "private")
+    path <- getFile(priv.id, example.url)
+    expect_identical(readLines(path), letters)
 })
