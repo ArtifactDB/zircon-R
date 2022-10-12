@@ -234,7 +234,7 @@ test_that("manually linked uploads fail correctly for JSON files", {
     names(links) <- meta
 
     start.url <- createUploadStartURL(example.url, "test-zircon-upload", version)
-    expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.link=mlinks, expires=1), "cannot request link-based deduplication")
+    expect_error(initializeUpload(tmp, f[linkable], start.url, dedup.link=links, expires=1), "cannot request link-based deduplication")
 })
 
 fun() # resetting identities at the end.
