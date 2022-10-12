@@ -14,10 +14,10 @@ NULL
 example.url <- "https://gypsum-test.aaron-lun.workers.dev"
 
 #' @export
-example.id <- "test-zircon-upload:blah.txt@base"
+example.id <- "test-public:blah.txt@base"
 
 #' @export
-example.project <- "test-zircon-upload"
+example.project <- "test-public"
 
 #' @export
 example.version <- "base"

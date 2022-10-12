@@ -18,7 +18,7 @@ library(zircon)
 example.url
 ## [1] "https://gypsum-test.aaron-lun.workers.dev"
 example.id
-## [1] "test-zircon-upload:blah.txt@base"
+## [1] "test-public:blah.txt@base"
 
 str(getFileMetadata(example.id, example.url))
 ## List of 5
@@ -29,8 +29,8 @@ str(getFileMetadata(example.id, example.url))
 ##  $ path        : chr "blah.txt"
 ##  $ _extra      :List of 9
 ##   ..$ $schema      : chr "generic_file/v1.json"
-##   ..$ id           : chr "test-zircon-upload:blah.txt@base"
-##   ..$ project_id   : chr "test-zircon-upload"
+##   ..$ id           : chr "test-public:blah.txt@base"
+##   ..$ project_id   : chr "test-public"
 ##   ..$ version      : chr "base"
 ##   ..$ metapath     : chr "blah.txt"
 ##   ..$ meta_indexed : chr "2022-10-01T19:45:51.913Z"
@@ -59,6 +59,7 @@ src <- system.file("scripts", "mock.R", package="zircon")
 source(src)
 tmp <- tempfile()
 createMockProject(tmp)
+
 uploadProject(tmp, example.url, "test-zircon-upload", "foobar")
 ```
 

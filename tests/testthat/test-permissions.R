@@ -16,7 +16,7 @@ test_that("permissions getters work correctly", {
 
 test_that("permissions getters fail correctly", {
     # This project is private and should not have access granted to anonymous users.
-    expect_error(getPermissions("test-zircon-permissions", example.url), "credentials not supplied")
+    expect_error(getPermissions("test-private", example.url), "credentials not supplied")
 })
 
 test_that("permissions setters work correctly", {
