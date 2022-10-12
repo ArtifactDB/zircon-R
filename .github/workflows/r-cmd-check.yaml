@@ -33,6 +33,8 @@ jobs:
       run: |
         tarball=$(ls *.tar.gz)
         R CMD check --no-manual $tarball
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
 
     # The remaining steps we only run on the master branch.
     - name: Install system dependencies
