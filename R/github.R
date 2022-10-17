@@ -63,12 +63,11 @@ setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https:
 2. Click 'Generate new token'.
 3. Give it a name and (optionally) set the desired expiry time.
 4. Click 'Generate token'.
-5. Copy and paste the token string below.
-
-TOKEN: "
+5. Copy and paste the token string below."
         }
 
-        token <- readline(prompt.text)
+        cat(prompt.text)
+        token <- readline("\n\nTOKEN: ")
         while (nchar(token)) {
             res <- GET(endpoint, add_headers(Authorization=paste("Bearer ", token)))
             if (res$status_code < 300) {
