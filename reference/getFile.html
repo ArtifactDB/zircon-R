@@ -132,7 +132,7 @@ If this fails or if <code>cache=NULL</code>, it will just download the requested
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">getFileURL</span><span class="op">(</span><span class="va">example.id</span>, url <span class="op">=</span> <span class="va">example.url</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "https://gypsum-test.bfb2e522e0b245720424784fcf7c04c0.r2.cloudflarestorage.com/test-public/base/blah.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=ae0f6ee0f014deff554f709698940ab3%2F20221012%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221012T204931Z&amp;X-Amz-Expires=120&amp;X-Amz-Signature=2610ffc688099b32f14540e1bb7f4dd6af8e3f690a838734b403eebaf21c4321&amp;X-Amz-SignedHeaders=host"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "https://gypsum-test.bfb2e522e0b245720424784fcf7c04c0.r2.cloudflarestorage.com/test-public/base/blah.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=ae0f6ee0f014deff554f709698940ab3%2F20221017%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221017T024441Z&amp;X-Amz-Expires=120&amp;X-Amz-Signature=1b7487e72682a49911170e29805d450ad20613d05b7c6d07b533ad244552be90&amp;X-Amz-SignedHeaders=host"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu">getFile</span><span class="op">(</span><span class="va">example.id</span>, url <span class="op">=</span> <span class="va">example.url</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="co"># as we know it's a text file.</span></span></span>
@@ -152,11 +152,11 @@ If this fails or if <code>cache=NULL</code>, it will just download the requested
 <span class="r-in"><span>    <span class="va">path</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="fu">getFile</span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpTsytKJ/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmpg1MN9s/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span>
 <span class="r-in"><span><span class="fu">getFile</span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span> </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> cache hit!</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> cache hit!</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpTsytKJ/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmpg1MN9s/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
