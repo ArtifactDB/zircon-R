@@ -40,24 +40,40 @@ cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cac
             dir.create(mdir, showWarnings=FALSE, recursive=TRUE)
         }
 
-        # Using the /files endpoint to download the metadata documents,
-        # which is technically allowed, I suppose.
         metapath <- m$path
-        if (!endsWith(metapath, ".json")) {
+        pure.meta <- endsWith(metapath, ".json")
+        if (!pure.meta) {
             metapath <- paste0(metapath, ".json")
         }
-        .cache_copy(
-            packID(project, metapath, version), 
-            url=url, 
-            cache=cache, 
-            final=file.path(dir, metapath)
-        )
 
-        fid <- packID(project, m$path, version)
-        if (link.only) {
-            createPlaceholderLink(dir, m$path, fid)
+        if (startsWith(m[["$schema"]], "redirection/")) {
+            m <- m[setdiff(names(m), "_extra")]
+
+            # Dealing with these guys separately, because /files will just
+            # redirect to the destination file, but we want to actually save
+            # the redirection metadata. Round-trip shouldn't be a problem here.
+            write(jsonlite::toJSON(m, auto_unbox=TRUE), file.path(dir, metapath))
+
         } else {
-            .cache_copy(fid, url=url, cache=cache, final=file.path(dir, m$path))
+            # Using the /files endpoint to download the metadata documents,
+            # which is technically allowed. This avoids the _extra stuff and
+            # potential problems from round-tripping JSON through R (namely,
+            # handling of length-1 vectors and numerical precision).
+            .cache_copy(
+                packID(project, metapath, version), 
+                url=url, 
+                cache=cache, 
+                final=file.path(dir, metapath)
+            )
+
+            if (!pure.meta) {
+                fid <- packID(project, m$path, version)
+                if (link.only) {
+                    createPlaceholderLink(dir, m$path, fid)
+                } else {
+                    .cache_copy(fid, url=url, cache=cache, final=file.path(dir, m$path))
+                }
+            }
         }
     }
 }

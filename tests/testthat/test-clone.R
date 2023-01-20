@@ -33,3 +33,10 @@ test_that("project cloning works as expected (cache)", {
     expect_identical(readLines(file.path(tmp2, "whee.txt")), letters)
     expect_true(cachedCounter$hits > 0L)
 })
+
+test_that("project cloning behaves with redirections", {
+    tmp <- tempfile()
+    cloneProjectVersion(tmp, example.url, "test-links", "public", cache=cacheTemporary)
+    expect_identical(jsonlite::fromJSON(file.path(tmp, "redirect.json"))$path, "redirect")
+    expect_identical(readLines(file.path(tmp, "foo/bar.txt")), as.character(1:100))
+})
