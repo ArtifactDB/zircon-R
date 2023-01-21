@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.1</span>
       </span>
     </div>
 
@@ -328,13 +328,13 @@ running <code><a href="https://rdrr.io/r/base/save.html" class="external-link">s
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/Rtmpqw7zNp/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmpa9RZ3y/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># cache hit (for the file and its metadata), same file path reported:</span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## cache hit!</span></span>
 <span><span class="co">## cache hit!</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "/tmp/Rtmpqw7zNp/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmpa9RZ3y/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
 <p>Note that this mechanism will automatically resolve any
 <code>latest</code> aliases in the supplied identifiers. This avoids
 problems with stale caches after updating the project versions.</p>
@@ -438,7 +438,7 @@ for an example of a wrapper around <em><a href="https://github.com/ArtifactDB/zi
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] zircon_0.98.0    BiocStyle_2.27.1</span></span>
+<span><span class="co">## [1] zircon_0.98.1    BiocStyle_2.27.1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] vctrs_0.5.1         httr_1.4.4          cli_3.6.0          </span></span>

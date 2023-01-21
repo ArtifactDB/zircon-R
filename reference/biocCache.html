@@ -18,7 +18,7 @@ Caching is based on BiocFileCache with thread-safety enforced by filelock."><!--
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.1</span>
       </span>
     </div>
 
@@ -99,11 +99,11 @@ Useful for resolving corrupted caches or incomplete downloads.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># First query hits the cache:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpSqeAIP/file6ce3c77e684/6ce2670bdc4_6ce2670bdc4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp3jHRef/file6cb150f2e02/6cb2c99080b_6cb2c99080b"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Second query re-uses the cache:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpSqeAIP/file6ce3c77e684/6ce2670bdc4_6ce2670bdc4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp3jHRef/file6cb150f2e02/6cb2c99080b_6cb2c99080b"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
