@@ -15,7 +15,7 @@ getProjectMetadata(project, url, version = NULL)
 }
 \value{
 A list is returned containing metadata for all files from a project.
-If \code{version} is specified, files are only returned for that versino of the project.
+If \code{version} is specified, files are only returned for that version of the project.
 }
 \description{
 Retrieve metadata for a project from an ArtifactDB using its REST endpoints.
