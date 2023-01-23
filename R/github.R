@@ -60,10 +60,11 @@ setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https:
             prompt.text <- "Please generate a new Github personal access token.
 
 1. Go to https://github.com/settings/tokens.
-2. Click 'Generate new token'.
+2. Click 'Generate new token' and then 'Generate new token (classic)'.
 3. Give it a name and (optionally) set the desired expiry time.
-4. Click 'Generate token'.
-5. Copy and paste the token string below."
+4. Make sure the 'read:org' box is checked.
+5. Click 'Generate token'.
+6. Copy and paste the token string into the prompt below."
         }
 
         cat(prompt.text)
