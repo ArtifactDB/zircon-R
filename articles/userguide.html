@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.2</span>
       </span>
     </div>
 
@@ -155,7 +155,7 @@ metadata.</p>
 <span><span class="co">##   ..$ format: chr "text"</span></span>
 <span><span class="co">##  $ md5sum      : chr "0eb827652a5c272e1c82002f1c972018"</span></span>
 <span><span class="co">##  $ path        : chr "blah.txt"</span></span>
-<span><span class="co">##  $ _extra      :List of 9</span></span>
+<span><span class="co">##  $ _extra      :List of 10</span></span>
 <span><span class="co">##   ..$ $schema      : chr "generic_file/v1.json"</span></span>
 <span><span class="co">##   ..$ id           : chr "test-public:blah.txt@base"</span></span>
 <span><span class="co">##   ..$ project_id   : chr "test-public"</span></span>
@@ -164,6 +164,7 @@ metadata.</p>
 <span><span class="co">##   ..$ meta_indexed : chr "2022-10-12T19:23:40.530Z"</span></span>
 <span><span class="co">##   ..$ meta_uploaded: chr "2022-10-12T19:23:17.912Z"</span></span>
 <span><span class="co">##   ..$ uploaded     : chr "2022-10-12T19:23:17.912Z"</span></span>
+<span><span class="co">##   ..$ uploader_name: chr "ArtifactDB-bot"</span></span>
 <span><span class="co">##   ..$ permissions  :List of 5</span></span>
 <span><span class="co">##   .. ..$ scope       : chr "project"</span></span>
 <span><span class="co">##   .. ..$ read_access : chr "public"</span></span>
@@ -193,7 +194,7 @@ project.</p>
 <span><span class="co">##   ..$ format: chr "text"</span></span>
 <span><span class="co">##  $ md5sum      : chr "0eb827652a5c272e1c82002f1c972018"</span></span>
 <span><span class="co">##  $ path        : chr "blah.txt"</span></span>
-<span><span class="co">##  $ _extra      :List of 9</span></span>
+<span><span class="co">##  $ _extra      :List of 10</span></span>
 <span><span class="co">##   ..$ $schema      : chr "generic_file/v1.json"</span></span>
 <span><span class="co">##   ..$ id           : chr "test-public:blah.txt@modified"</span></span>
 <span><span class="co">##   ..$ project_id   : chr "test-public"</span></span>
@@ -202,6 +203,7 @@ project.</p>
 <span><span class="co">##   ..$ meta_indexed : chr "2022-10-12T20:07:25.980Z"</span></span>
 <span><span class="co">##   ..$ meta_uploaded: chr "2022-10-12T20:07:10.616Z"</span></span>
 <span><span class="co">##   ..$ uploaded     : chr "2022-10-12T20:07:10.616Z"</span></span>
+<span><span class="co">##   ..$ uploader_name: chr "ArtifactDB-bot"</span></span>
 <span><span class="co">##   ..$ permissions  :List of 5</span></span>
 <span><span class="co">##   .. ..$ scope       : chr "project"</span></span>
 <span><span class="co">##   .. ..$ read_access : chr "public"</span></span>
@@ -328,13 +330,13 @@ running <code><a href="https://rdrr.io/r/base/save.html" class="external-link">s
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/Rtmpa9RZ3y/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmp2JHnag/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># cache hit (for the file and its metadata), same file path reported:</span></span>
 <span><span class="fu"><a href="../reference/getFile.html">getFile</a></span><span class="op">(</span><span class="va">example.id</span>, <span class="va">example.url</span>, cache <span class="op">=</span> <span class="va">cache.fun</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## cache hit!</span></span>
 <span><span class="co">## cache hit!</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "/tmp/Rtmpa9RZ3y/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/Rtmp2JHnag/zircon-cache/https%3A%2F%2Fgypsum-test.aaron-lun.workers.dev%2Ffiles%2Ftest-public%253Ablah.txt%2540base"</span></span></code></pre>
 <p>Note that this mechanism will automatically resolve any
 <code>latest</code> aliases in the supplied identifiers. This avoids
 problems with stale caches after updating the project versions.</p>
@@ -438,7 +440,7 @@ for an example of a wrapper around <em><a href="https://github.com/ArtifactDB/zi
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] zircon_0.98.1    BiocStyle_2.27.1</span></span>
+<span><span class="co">## [1] zircon_0.98.2    BiocStyle_2.27.1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] vctrs_0.5.1         httr_1.4.4          cli_3.6.0          </span></span>

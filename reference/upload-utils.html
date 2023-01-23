@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.2</span>
       </span>
     </div>
 
@@ -63,7 +63,8 @@
 <span>  md5.field <span class="op">=</span> <span class="st">"md5sum"</span>,</span>
 <span>  dedup.link <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  expires <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  user.agent <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  user.agent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  override.key <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">createUploadStartURL</span><span class="op">(</span><span class="va">url</span>, <span class="va">project</span>, <span class="va">version</span><span class="op">)</span></span>
@@ -127,6 +128,10 @@ By default, the files have no expiry date.</p></dd>
 <dt>user.agent</dt>
 <dd><p>String containing a user agent string.
 If <code>NULL</code>, a default user agent is used.</p></dd>
+
+
+<dt>override.key</dt>
+<dd><p>String containing an override key that allows uploads regardless of the (authenticated) user.</p></dd>
 
 
 <dt>url</dt>

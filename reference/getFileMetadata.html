@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.2</span>
       </span>
     </div>
 
@@ -123,7 +123,7 @@ See <code><a href="biocCache.html">biocCache</a></code> for one possible impleme
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ format: chr "text"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ md5sum      : chr "0eb827652a5c272e1c82002f1c972018"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ path        : chr "blah.txt"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ _extra      :List of 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ _extra      :List of 10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ $schema      : chr "generic_file/v1.json"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ id           : chr "test-public:blah.txt@base"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ project_id   : chr "test-public"</span>
@@ -132,6 +132,7 @@ See <code><a href="biocCache.html">biocCache</a></code> for one possible impleme
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ meta_indexed : chr "2022-10-12T19:23:40.530Z"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ meta_uploaded: chr "2022-10-12T19:23:17.912Z"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ uploaded     : chr "2022-10-12T19:23:17.912Z"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ uploader_name: chr "ArtifactDB-bot"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ permissions  :List of 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..$ scope       : chr "project"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..$ read_access : chr "public"</span>
@@ -142,7 +143,7 @@ See <code><a href="biocCache.html">biocCache</a></code> for one possible impleme
 <span class="r-in"><span><span class="co"># Simple caching in the temporary directory:</span></span></span>
 <span class="r-in"><span><span class="va">tmp.cache</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"zircon-cache"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">tmp.cache</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'/tmp/Rtmp3jHRef/zircon-cache' already exists</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'/tmp/RtmpfWvhxl/zircon-cache' already exists</span>
 <span class="r-in"><span><span class="va">cache.fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">key</span>, <span class="va">save</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>    <span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp.cache</span>, <span class="fu"><a href="https://rdrr.io/r/utils/URLencode.html" class="external-link">URLencode</a></span><span class="op">(</span><span class="va">key</span>, reserved<span class="op">=</span><span class="cn">TRUE</span>, repeated<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
