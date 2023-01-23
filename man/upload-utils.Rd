@@ -17,7 +17,8 @@ initializeUpload(
   md5.field = "md5sum",
   dedup.link = NULL,
   expires = NULL,
-  user.agent = NULL
+  user.agent = NULL,
+  override.key = NULL
 )
 
 createUploadStartURL(url, project, version)
@@ -62,6 +63,8 @@ By default, the files have no expiry date.}
 
 \item{user.agent}{String containing a user agent string.
 If \code{NULL}, a default user agent is used.}
+
+\item{override.key}{String containing an override key that allows uploads regardless of the (authenticated) user.}
 
 \item{url}{String containing the URL to the REST API.}
 

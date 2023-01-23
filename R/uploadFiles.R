@@ -31,6 +31,7 @@
 #' @param version String containing the version.
 #' @param user.agent String containing a user agent string.
 #' If \code{NULL}, a default user agent is used.
+#' @param override.key String containing an override key that allows uploads regardless of the (authenticated) user.
 #' 
 #' @return
 #' \code{initializeUpload} will return the \code{response} object from hitting the upload endpoint.
@@ -132,7 +133,7 @@
 #' @export
 #' @rdname upload-utils
 #' @importFrom httr POST add_headers 
-initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.md5=NULL, md5.field="md5sum", dedup.link=NULL, expires=NULL, user.agent=NULL) {
+initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.md5=NULL, md5.field="md5sum", dedup.link=NULL, expires=NULL, user.agent=NULL, override.key=NULL) {
     stopifnot(length(intersect(files, names(dedup.link)))==0L)
     stopifnot(length(intersect(files, names(dedup.md5)))==0L)
     stopifnot(length(intersect(names(dedup.link), names(dedup.md5)))==0L)
@@ -172,7 +173,12 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
         body$completed_by <- body$expires_in # this needs to be <= expiry date.
     }
 
-    added <- .follow_redirects_faithfully(POST, start.url, body=body, encode='json', user.agent=user.agent)
+    args <- list(FUN=POST, url=start.url, body=body, encode='json', user.agent=user.agent)
+    if (!is.null(override.key)) {
+        args <- c(args, list(add_headers("ArtifactDB-upload-override-key"=override.key)))
+    }
+
+    added <- do.call(.follow_redirects_faithfully, args)
     checkResponse(added)
 
     added
