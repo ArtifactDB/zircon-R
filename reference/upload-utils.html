@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zircon</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.98.4</span>
       </span>
     </div>
 
@@ -69,7 +69,14 @@
 <span></span>
 <span><span class="fu">createUploadStartURL</span><span class="op">(</span><span class="va">url</span>, <span class="va">project</span>, <span class="va">version</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">uploadFiles</span><span class="op">(</span><span class="va">dir</span>, <span class="va">url</span>, <span class="va">initial</span>, user.agent <span class="op">=</span> <span class="cn">NULL</span>, attempts <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu">uploadFiles</span><span class="op">(</span></span>
+<span>  <span class="va">dir</span>,</span>
+<span>  <span class="va">url</span>,</span>
+<span>  <span class="va">initial</span>,</span>
+<span>  user.agent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  attempts <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">completeUpload</span><span class="op">(</span></span>
 <span>  <span class="va">url</span>,</span>
@@ -153,6 +160,10 @@ If <code>NULL</code>, a default user agent is used.</p></dd>
 <dt>attempts</dt>
 <dd><p>Integer scalar specifying the number of upload attempts on each file, in case of connection drops or timeouts.
 Each attempt is followed by a 1 minute wait.</p></dd>
+
+
+<dt>verbose</dt>
+<dd><p>Logical scalar indicating whether to report upload progress.</p></dd>
 
 
 <dt>index.wait</dt>
