@@ -23,7 +23,14 @@ initializeUpload(
 
 createUploadStartURL(url, project, version)
 
-uploadFiles(dir, url, initial, user.agent = NULL, attempts = 3)
+uploadFiles(
+  dir,
+  url,
+  initial,
+  user.agent = NULL,
+  attempts = 3,
+  verbose = FALSE
+)
 
 completeUpload(
   url,
@@ -76,6 +83,8 @@ If \code{NULL}, a default user agent is used.}
 
 \item{attempts}{Integer scalar specifying the number of upload attempts on each file, in case of connection drops or timeouts.
 Each attempt is followed by a 1 minute wait.}
+
+\item{verbose}{Logical scalar indicating whether to report upload progress.}
 
 \item{index.wait}{Numeric scalar specifying the number of seconds to wait when checking for correct indexing.}
 

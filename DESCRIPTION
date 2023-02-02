@@ -1,8 +1,8 @@
 Package: zircon
-Version: 0.98.3
-Date: 2023-01-23
+Version: 0.98.4
+Date: 2023-02-01
 Title: Interface to an ArtifactDB REST API
-Description: o
+Description:
     Provides a friendly interface to the REST API of any ArtifactDB.
     This abstracts away the endpoints for easier use in downstream packages.
 Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com")

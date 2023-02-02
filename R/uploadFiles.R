@@ -32,6 +32,7 @@
 #' @param user.agent String containing a user agent string.
 #' If \code{NULL}, a default user agent is used.
 #' @param override.key String containing an override key that allows uploads regardless of the (authenticated) user.
+#' @param verbose Logical scalar indicating whether to report upload progress.
 #' 
 #' @return
 #' \code{initializeUpload} will return the \code{response} object from hitting the upload endpoint.
@@ -255,8 +256,8 @@ createUploadStartURL <- function(url, project, version) {
 
 #' @export
 #' @rdname upload-utils
-#' @importFrom httr PUT stop_for_status upload_file add_headers content
-uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
+#' @importFrom httr PUT stop_for_status upload_file add_headers content progress
+uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3, verbose=FALSE) {
     dedup.urls <- .parse_initial(initial)$links
     for (d in seq_along(dedup.urls)) {
         current <- dedup.urls[[d]]
@@ -268,6 +269,7 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
     # Looping through all files and uploading them. Each upload undergoes several 
     # attempts to be robust to connection loss or timeouts.
     up.urls <- initial$presigned_urls
+
     for (g in seq_along(up.urls)) {
         current <- up.urls[[g]]
         up.url <- current$url
@@ -276,8 +278,20 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3) {
         failed <- TRUE
         msg <- NULL
 
+        args <- list(
+            url = up.url,
+            body = upload_file(file.path(dir, up.path)),
+            .user_agent(user.agent),
+            add_headers(`Content-MD5`=up.md5)
+        )
+
+        if (verbose) {
+            args <- c(args, list(progress("up")))
+            message(paste0("uploading '", up.path, "' ..."))
+        }
+
         for (i in seq_len(attempts)) {
-            out <- PUT(up.url, body=upload_file(file.path(dir, up.path)), .user_agent(user.agent), add_headers(`Content-MD5`=up.md5))
+            out <- do.call(PUT, args)
             if (out$status_code < 300) {
                 failed <- FALSE
                 break
