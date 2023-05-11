@@ -6,6 +6,7 @@
 #' @param ... Further arguments to pass to \code{\link{initializeUpload}}.
 #' @param upload.args Further arguments to pass to \code{\link{uploadFiles}}.
 #' @param complete.args Further arguments to pass to \code{\link{completeUpload}}.
+#' @param auto.abort Logical scalar specifying whether \code{\link{abortUpload}} should be automatically called on any upload failure.
 #'
 #' @return On success, \code{NULL} is returned invisibly.
 #'
@@ -35,13 +36,13 @@
 #' uploadProject(tmp, example.url, "test-zircon-upload", "foobar", expires=1)
 #' }
 #' @export
-uploadProject <- function(dir, url, project, version, files = list.files(dir, recursive=TRUE), ..., permissions=list(), upload.args=list(), complete.args=list(), user.agent=NULL) {
+uploadProject <- function(dir, url, project, version, files = list.files(dir, recursive=TRUE), ..., permissions=list(), upload.args=list(), complete.args=list(), auto.abort=TRUE, user.agent=NULL) {
     start.url <- createUploadStartURL(url, project, version)
     success <- FALSE
     info <- initializeUpload(dir, files, start.url, ..., user.agent=user.agent)
 
     parsed <- content(info, simplifyVector=TRUE, simplifyMatrix=FALSE, simplifyDataFrame=FALSE)
-    on.exit(if (!success) abortUpload(url, parsed, user.agent=user.agent))
+    on.exit(if (!success && auto.abort) abortUpload(url, parsed, user.agent=user.agent))
 
     upload.args <- c(list(dir=dir, url=url, initial=parsed, user.agent=user.agent), upload.args)
     do.call(uploadFiles, upload.args)

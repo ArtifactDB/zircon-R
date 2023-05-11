@@ -14,6 +14,7 @@ uploadProject(
   permissions = list(),
   upload.args = list(),
   complete.args = list(),
+  auto.abort = TRUE,
   user.agent = NULL
 )
 }
@@ -37,6 +38,8 @@ This usually contains the \code{owners} and \code{viewers} character vectors.}
 \item{upload.args}{Further arguments to pass to \code{\link{uploadFiles}}.}
 
 \item{complete.args}{Further arguments to pass to \code{\link{completeUpload}}.}
+
+\item{auto.abort}{Logical scalar specifying whether \code{\link{abortUpload}} should be automatically called on any upload failure.}
 
 \item{user.agent}{String containing a user agent string.
 If \code{NULL}, a default user agent is used.}
