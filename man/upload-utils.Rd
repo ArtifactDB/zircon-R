@@ -18,7 +18,8 @@ initializeUpload(
   dedup.link = NULL,
   expires = NULL,
   user.agent = NULL,
-  override.key = NULL
+  override.key = NULL,
+  api.version = 2
 )
 
 createUploadStartURL(url, project, version)
@@ -72,6 +73,8 @@ By default, the files have no expiry date.}
 If \code{NULL}, a default user agent is used.}
 
 \item{override.key}{String containing an override key that allows uploads regardless of the (authenticated) user.}
+
+\item{api.version}{Integer scalar specifying the version of the API.}
 
 \item{url}{String containing the URL to the REST API.}
 

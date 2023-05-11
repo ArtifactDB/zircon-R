@@ -33,6 +33,7 @@
 #' If \code{NULL}, a default user agent is used.
 #' @param override.key String containing an override key that allows uploads regardless of the (authenticated) user.
 #' @param verbose Logical scalar indicating whether to report upload progress.
+#' @param api.version Integer scalar specifying the version of the API.
 #' 
 #' @return
 #' \code{initializeUpload} will return the \code{response} object from hitting the upload endpoint.
@@ -134,12 +135,12 @@
 #' @export
 #' @rdname upload-utils
 #' @importFrom httr POST add_headers 
-initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.md5=NULL, md5.field="md5sum", dedup.link=NULL, expires=NULL, user.agent=NULL, override.key=NULL) {
+initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.md5=NULL, md5.field="md5sum", dedup.link=NULL, expires=NULL, user.agent=NULL, override.key=NULL, api.version=2) {
     stopifnot(length(intersect(files, names(dedup.link)))==0L)
     stopifnot(length(intersect(files, names(dedup.md5)))==0L)
     stopifnot(length(intersect(names(dedup.link), names(dedup.md5)))==0L)
 
-    files <- .format_files(dir, files, auto.dedup.md5=auto.dedup.md5, md5.field=md5.field)
+    files <- .format_files(dir, files, auto.dedup.md5=auto.dedup.md5, md5.field=md5.field, api.version=api.version)
 
     # Explicitly listed MD5 for deduplication.
     md5.files <- vector("list", length(dedup.md5))
@@ -186,7 +187,7 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
 }
 
 #' @importFrom jsonlite fromJSON
-.format_files <- function(dir, files, auto.dedup.md5, md5.field) {
+.format_files <- function(dir, files, auto.dedup.md5, md5.field, api.version) {
     link.targets <- Sys.readlink(file.path(dir, files))
     is.placeholder <- link.targets != ""
     is.placeholder[is.placeholder] <- !file.exists(link.targets[is.placeholder])
@@ -218,7 +219,11 @@ initializeUpload <- function(dir, files, start.url, auto.dedup.md5=FALSE, dedup.
 
         base <- list(filename=fname, value=list(md5sum=md5))
         if (!current.dedup.md5) {
-            base$check <- "simple"
+            if (api.version == 2) {
+                base$check <- "simple"
+            } else {
+                base <- fname
+            }
         } else {
             base$check <- "md5"
             base$value$field <- md5.field
@@ -254,6 +259,49 @@ createUploadStartURL <- function(url, project, version) {
     }
 }
 
+.upload_one_file <- function(up.url, dir, up.path, user.agent, up.md5, attempts, verbose) {
+    args <- list(
+        url = up.url,
+        body = upload_file(file.path(dir, up.path)),
+        .user_agent(user.agent)
+    )
+
+    if (!is.null(up.md5)) {
+        args <- c(args, list(add_headers(`Content-MD5`=up.md5)))
+    } 
+
+    if (verbose) {
+        args <- c(args, list(progress("up")))
+        message(paste0("uploading '", up.path, "' ..."))
+    }
+    
+    # Each upload undergoes several attempts to be robust to connection loss or timeouts.
+    failed <- TRUE
+    msg <- NULL
+
+    for (i in seq_len(attempts)) {
+        out <- do.call(PUT, args)
+        if (out$status_code < 300) {
+            failed <- FALSE
+            break
+        }
+
+        msg <- try(content(out, as="text", encoding="UTF-8"))
+        if (i < attempts) {
+            # Try again after some time, maybe it's feeling better.
+            Sys.sleep(60)
+        }
+    }
+
+    if (failed) {
+        err <- paste0("failed to upload '", up.path, "'")
+        if (!is.null(msg) && !is(msg, "try-error")) {
+            err <- paste0(err, ":\n", msg)
+        }
+        stop(err)
+    } 
+}
+
 #' @export
 #' @rdname upload-utils
 #' @importFrom httr PUT stop_for_status upload_file add_headers content progress
@@ -266,51 +314,18 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3, verbose=
         checkResponse(out)
     } 
 
-    # Looping through all files and uploading them. Each upload undergoes several 
-    # attempts to be robust to connection loss or timeouts.
+    # Looping through all files and uploading them. 
     up.urls <- initial$presigned_urls
 
-    for (g in seq_along(up.urls)) {
-        current <- up.urls[[g]]
-        up.url <- current$url
-        up.md5 <- current$md5sum
-        up.path <- current$filename
-        failed <- TRUE
-        msg <- NULL
-
-        args <- list(
-            url = up.url,
-            body = upload_file(file.path(dir, up.path)),
-            .user_agent(user.agent),
-            add_headers(`Content-MD5`=up.md5)
-        )
-
-        if (verbose) {
-            args <- c(args, list(progress("up")))
-            message(paste0("uploading '", up.path, "' ..."))
+    if (is.null(names(up.urls))) {
+        for (g in seq_along(up.urls)) {
+            current <- up.urls[[g]]
+            .upload_one_file(dir=dir, up.url=current$url, up.md5=current$md5sum, up.path=current$filename, verbose=verbose, user.agent=user.agent, attempts=attempts)
         }
-
-        for (i in seq_len(attempts)) {
-            out <- do.call(PUT, args)
-            if (out$status_code < 300) {
-                failed <- FALSE
-                break
-            }
-
-            msg <- try(content(out, as="text", encoding="UTF-8"))
-            if (i < attempts) {
-                # Try again after some time, maybe it's feeling better.
-                Sys.sleep(60)
-            }
+    } else {
+        for (fname in names(up.urls)) {
+            .upload_one_file(dir=dir, up.url=up.urls[[fname]], up.md5=NULL, up.path=fname, verbose=verbose, user.agent=user.agent, attempts=attempts)
         }
-
-        if (failed) {
-            err <- paste0("failed to upload '", up.path, "'")
-            if (!is.null(msg) && !is(msg, "try-error")) {
-                err <- paste0(err, ":\n", msg)
-            }
-            stop(err)
-        } 
     }
 }
 
@@ -319,7 +334,12 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3, verbose=
 #' @importFrom httr PUT add_headers 
 completeUpload <- function(url, initial, index.wait=600, must.index=FALSE, permissions=list(), overwrite.permissions=FALSE, user.agent=NULL) {
     initial <- .parse_initial(initial)
-    end.url <- paste0(url, initial$completion_url)
+
+    if (startsWith(initial$completion_url, "http")) {
+        end.url <- initial$completion_url # apparently it returns the full thing.
+    } else {
+        end.url <- paste0(url, initial$completion_url)
+    }
 
     if (overwrite.permissions) {
         end.url <- paste0(end.url, "&overwrite_permissions=true")
@@ -333,10 +353,6 @@ completeUpload <- function(url, initial, index.wait=600, must.index=FALSE, permi
     }
     if (!is.null(permissions$owners)) {
         permissions$owners <- I(permissions$owners)
-    }
-
-    if (is.null(end.url)) {
-        end.url <- initial$completion_url
     }
 
     fin <- .follow_redirects_faithfully(PUT, end.url, body=permissions, encode="json", user.agent=user.agent)
