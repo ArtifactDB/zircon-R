@@ -83,7 +83,8 @@ getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=N
     }
 
     raw <- BASEFUN()
-    content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+    output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+    .restore_schema(output)
 }
 
 .get_file_metadata_url <- function(x, u, follow.links) {
@@ -92,4 +93,11 @@ getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=N
         endpoint <- paste0(endpoint, "?follow_link=true")
     }
     endpoint
+}
+
+.restore_schema <- function(x) {
+    if (!("$schema" %in% names(x)) && "_extra" %in% names(x)) {
+        x[["$schema"]] <- x[["_extra"]][["$schema"]]
+    }
+    x
 }

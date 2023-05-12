@@ -44,6 +44,7 @@ getProjectMetadata <- function(project, url, version=NULL) {
             break
         }
 
+        harvest <- lapply(harvest, .restore_schema)
         collected <- c(collected, harvest)
 
         link.info <- headers(output)$link
