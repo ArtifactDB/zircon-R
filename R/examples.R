@@ -11,7 +11,7 @@
 NULL
 
 #' @export
-example.url <- "https://gypsum-test.aaron-lun.workers.dev"
+example.url <- "https://demodb.api.artifactdb.io/v1"
 
 #' @export
 example.id <- "test-public:blah.txt@base"
