@@ -307,9 +307,15 @@ createUploadStartURL <- function(url, project, version) {
 #' @importFrom httr PUT stop_for_status upload_file add_headers content progress
 uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3, verbose=FALSE) {
     dedup.urls <- .parse_initial(initial)$links
+
     for (d in seq_along(dedup.urls)) {
         current <- dedup.urls[[d]]
-        endpoint <- paste0(url, "/", current$url)
+        if (!is.character(current)) {
+            endpoint <- paste0(url, "/", current$url)
+        } else {
+            # Old API returns the full URL.
+            endpoint <- current
+        }
         out <- .follow_redirects_faithfully(PUT, endpoint, user.agent=user.agent)
         checkResponse(out)
     } 
@@ -323,6 +329,7 @@ uploadFiles <- function(dir, url, initial, user.agent=NULL, attempts=3, verbose=
             .upload_one_file(dir=dir, up.url=current$url, up.md5=current$md5sum, up.path=current$filename, verbose=verbose, user.agent=user.agent, attempts=attempts)
         }
     } else {
+        # Old API returns a dictionary.
         for (fname in names(up.urls)) {
             .upload_one_file(dir=dir, up.url=up.urls[[fname]], up.md5=NULL, up.path=fname, verbose=verbose, user.agent=user.agent, attempts=attempts)
         }
@@ -336,7 +343,7 @@ completeUpload <- function(url, initial, index.wait=600, must.index=FALSE, permi
     initial <- .parse_initial(initial)
 
     if (startsWith(initial$completion_url, "http")) {
-        end.url <- initial$completion_url # apparently it returns the full thing.
+        end.url <- initial$completion_url # Old API returns the full thing.
     } else {
         end.url <- paste0(url, initial$completion_url)
     }
