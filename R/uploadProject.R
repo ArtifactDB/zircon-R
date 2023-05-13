@@ -37,6 +37,10 @@
 #' }
 #' @export
 uploadProject <- function(dir, url, project, version, files = list.files(dir, recursive=TRUE), ..., permissions=list(), upload.args=list(), complete.args=list(), auto.abort=TRUE, user.agent=NULL) {
+    if (length(permissions$owners) == 0) {
+        stop("a character vector of owners should be supplied in 'permissions'")
+    }
+
     start.url <- createUploadStartURL(url, project, version)
     success <- FALSE
     info <- initializeUpload(dir, files, start.url, ..., user.agent=user.agent)
