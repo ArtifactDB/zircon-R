@@ -8,11 +8,6 @@ test_that("file metadata getters work correctly", {
     expect_identical(X$path, unpacked$path)
     expect_identical(X[["_extra"]][["version"]], unpacked$version)
     expect_identical(X[["_extra"]][["project_id"]], unpacked$project)
-
-    # Report links.
-    linked <- getFileMetadata(packID("test-links", "foo/bar.txt", "public"), example.url)
-    unpack.link <- unpackID(linked[["_extra"]][["link"]][["artifactdb"]])
-    expect_identical(unpack.link$project, example.project)
 })
 
 test_that("file metadata getters work correctly with caching", {
@@ -42,7 +37,18 @@ test_that("file metadata getters work correctly with the latest alias", {
 })
 
 test_that("file metadata getters follow links (or not)", {
-    redirect <- getFileMetadata(packID("test-links", "redirect", "public"), example.url, follow.links=FALSE)
+    linked <- getFileMetadata(packID("test-links", "foo/bar.txt", "public"), example.url)
+    unpack.link <- unpackID(linked[["_extra"]][["link"]][["artifactdb"]])
+    expect_identical(unpack.link$project, example.project)
+
+    linked <- getFileMetadata(packID("test-links", "foo/bar.txt", "public"), example.url, follow.link=TRUE)
+    expect_null(linked[["_extra"]][["link"]])
+    unpack.link <- unpackID(linked[["_extra"]][["id"]])
+    expect_identical(unpack.link$project, example.project)
+})
+
+test_that("file metadata getters follow redirects (or not)", {
+    redirect <- getFileMetadata(packID("test-links", "redirect", "public"), example.url, follow.redirect=FALSE)
     expect_identical(redirect[["$schema"]], "redirection/v1.json")
     expect_match(redirect$redirection$targets[[1]]$location, "foo")
 

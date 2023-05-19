@@ -106,7 +106,7 @@ getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agen
 }
 
 .get_original_linked_file <- function(id, url, cache, user.agent) {
-    output <- try(getFileMetadata(id, url=url, cache=cache, follow.links=TRUE, user.agent=user.agent), silent=TRUE)
+    output <- try(getFileMetadata(id, url=url, cache=cache, user.agent=user.agent), silent=TRUE)
 
     endpoint <- .get_raw_file_url(id, url)
 

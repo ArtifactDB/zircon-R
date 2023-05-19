@@ -8,8 +8,10 @@
 #' @param url String containing the URL of the ArtifactDB REST endpoint.
 #' @param cache Function to perform caching, see Details.
 #' If \code{NULL}, no caching is performed.
-#' @param follow.links Logical scalar indicating whether to follow links, if \code{id} is a link to another target resource. 
-#' If \code{TRUE}, metadata for the target resource is returned; otherwise, metadata for the link itself is returned.
+#' @param follow.link Logical scalar indicating whether to follow deduplicating links, if \code{id} is linked to another target resource. 
+#' If \code{TRUE}, metadata for the target resource is returned.
+#' @param follow.redirect Logical scalar indicating whether to follow uploader-provided redirections, if \code{id} is a placeholder that redirects to another target resource. 
+#' If \code{TRUE}, metadata for the target resource is returned; otherwise, the metadata for the link itself is returned.
 #' @param user.agent String containing the user agent, see \code{\link{authorizedVerb}}.
 #'
 #' @return
@@ -61,12 +63,16 @@
 #' @rdname getFileMetadata
 #' @importFrom httr GET content write_disk
 #' @importFrom jsonlite fromJSON
-getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=NULL) {
+getFileMetadata <- function(id, url, cache=NULL, follow.link=FALSE, follow.redirect=TRUE, user.agent=NULL) {
     if (!is.null(cache)) {
         id <- resolveLatestID(id, url)
     }
 
-    endpoint <- .get_file_metadata_url(id, url, follow.links=follow.links)
+    endpoint <- paste(url, "files", URLencode(id, reserved=TRUE), "metadata", sep="/")
+    if (follow.link) {
+        endpoint <- paste0(endpoint, "?follow_link=true")
+    }
+
     BASEFUN <- function(...) {
         output <- authorizedVerb(GET, url=endpoint, ..., user.agent=user.agent)
         checkResponse(output)
@@ -84,15 +90,20 @@ getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=N
         output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
     }
 
-    .restore_schema(output)
-}
+    output <- .restore_schema(output)
 
-.get_file_metadata_url <- function(x, u, follow.links) {
-    endpoint <- paste(u, "files", URLencode(x, reserved=TRUE), "metadata", sep="/")
-    if (follow.links) {
-        endpoint <- paste0(endpoint, "?follow_link=true")
+    if (follow.redirect && startsWith(output[["$schema"]], "redirection/")) {
+        for (found in output$redirection$targets) {
+            if (found$type == "local") {
+                unpacked <- unpackID(id)
+                id2 <- packID(unpacked$project, found$location, unpacked$version)
+                output <- getFileMetadata(id2, url, cache=cache, follow.link=follow.link, follow.redirect=follow.redirect, user.agent=user.agent)
+                break
+            }
+        }
     }
-    endpoint
+
+    output
 }
 
 .restore_schema <- function(x) {
