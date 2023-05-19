@@ -79,11 +79,11 @@ getFileMetadata <- function(id, url, cache=NULL, follow.links=TRUE, user.agent=N
             save = function(path) BASEFUN(write_disk(path, overwrite=TRUE))
         )
         output <- fromJSON(path, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
-        return(output)
+    } else {
+        raw <- BASEFUN()
+        output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
     }
 
-    raw <- BASEFUN()
-    output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
     .restore_schema(output)
 }
 
