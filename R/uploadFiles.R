@@ -361,6 +361,7 @@ completeUpload <- function(url, initial, index.wait=600, must.index=FALSE, permi
     if (!is.null(permissions$owners)) {
         permissions$owners <- I(permissions$owners)
     }
+    permissions$scope <- "project"
 
     fin <- .follow_redirects_faithfully(PUT, end.url, body=permissions, encode="json", user.agent=user.agent)
     checkResponse(fin)
