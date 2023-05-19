@@ -16,10 +16,11 @@ test_that("permissions getters work correctly", {
 
 test_that("permissions getters fail correctly for private projects", {
     # This project is private and should not have access granted to anonymous users.
-    expect_error(getPermissions("test-private", example.url), "credentials not supplied")
+    expect_error(getPermissions("test-private", example.url), "authenticated")
 })
 
 test_that("permissions getters work correctly for private projects", {
+    skip("no authentication system")
     fun <- setGithubIdentities()
     if (is.null(fun)) {
         skip("no credentials for testing permission setting")
@@ -31,6 +32,7 @@ test_that("permissions getters work correctly for private projects", {
 })
 
 test_that("permissions setters work correctly", {
+    skip("no authentication system")
     fun <- setGithubIdentities()
     if (is.null(fun)) {
         skip("no credentials for testing permission setting")

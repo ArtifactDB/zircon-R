@@ -20,7 +20,7 @@ test_that("symlinks are correctly detected on upload initialization", {
     write(file=file.path(tmp, "foo.json"), LETTERS)
     file.symlink(system.file("scripts", "mock.R", package="zircon"), file.path(tmp, "mock.json"))
     createPlaceholderLink(tmp, "boo.txt", example.id)
-    formatted <- zircon:::.format_files(tmp, c("foo.json", "mock.json", "boo.txt"), auto.dedup.md5=FALSE, md5.field="md5sum")
+    formatted <- zircon:::.format_files(tmp, c("foo.json", "mock.json", "boo.txt"), auto.dedup.md5=FALSE, md5.field="md5sum", api.version=2)
 
     # Simple things work...
     expect_identical(formatted[[1]]$check, "simple")

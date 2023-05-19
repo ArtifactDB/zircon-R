@@ -17,9 +17,15 @@ test_that("per-version project metadata getters work correctly", {
         }
     }
 
-    # Should be exactly the same as the /files output.
     expect_false(is.null(ref))
-    expect_identical(ref, getFileMetadata(example.id, example.url))
+
+    # Should be exactly the same as the /files output, after adjusting the ordering inside _extra.
+    out <- getFileMetadata(example.id, example.url)
+#    named <- names(ref[["_extra"]])
+#    expect_identical(sort(named), sort(names(out[["_extra"]]))) # due to a missing 'transient' field in the /projects response.
+#    out[["_extra"]] <- out[["_extra"]][named]
+    ref[["_extra"]] <- ref[["_extra"]][names(out[["_extra"]])]
+    expect_identical(ref, out)
 })
 
 test_that("project metadata getters work correctly", {

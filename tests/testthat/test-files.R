@@ -121,10 +121,11 @@ test_that("file getters fail on links to private resources", {
     link.id <- linked[["_extra"]][["link"]][["artifactdb"]]
     expect_identical(unpackID(link.id)$project, "test-private")
 
-    expect_error(getFile(priv.id, example.url), "credentials not supplied")
+    expect_error(getFile(priv.id, example.url), "No such file")
 })
 
 test_that("file getters work with private resources upon authorization", {
+    skip("no authentication system provided")
     fun <- setGithubIdentities()
     if (is.null(fun)) {
         skip("no credentials for testing permission setting")

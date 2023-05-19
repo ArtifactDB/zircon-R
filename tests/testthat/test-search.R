@@ -5,19 +5,19 @@ test_that("searchMetadata works as expected", {
     searched <- searchMetadata(example.project, url=example.url, warn.auth=FALSE)
     expect_true(length(searched) > 1)
     projects <- vapply(searched, function(x) x$`_extra`$project_id, "")
-    expect_true(any(thing == projects))
+    expect_true(any(example.project == projects))
 
     # Constricted to the desired fields.
-    searched <- searchMetadata(thing, fields="description", url=example.url, warn.auth=FALSE)
+    searched <- searchMetadata(example.project, fields="path", url=example.url, warn.auth=FALSE)
     expect_true(length(searched) > 1)
 
     returned <- lapply(searched, names)
     returned <- unique(unlist(returned))
     returned <- returned[!grepl("_extra", returned)]
-    expect_identical(returned, "description")
+    expect_identical(returned, "path")
 
     # Only gets the requested number.
-    searched <- searchMetadata(thing, url=example.url, number=1, warn.auth=FALSE)
+    searched <- searchMetadata(example.project, url=example.url, number=1, warn.auth=FALSE)
     expect_true(length(searched)==1)
 })
 
