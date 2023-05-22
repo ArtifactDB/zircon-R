@@ -10,7 +10,7 @@ getFile(
   url,
   path = NULL,
   cache = NULL,
-  follow.links = TRUE,
+  follow.link = TRUE,
   user.agent = NULL
 )
 
@@ -30,7 +30,7 @@ Defaults to a temporary path if \code{NULL}.}
 \item{cache}{Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 If \code{NULL}, no caching is performed.}
 
-\item{follow.links}{Logical scalar indicating whether to search for links to duplicate files, see Details.}
+\item{follow.link}{Logical scalar indicating whether to search for links to duplicate files, see Details.}
 
 \item{user.agent}{String containing the user agent, see \code{\link{authorizedVerb}}.}
 
@@ -47,7 +47,7 @@ Retrieve a file from an ArtifactDB using its REST endpoints.
 }
 \details{
 ArtifactDB instances support linking between identical files to avoid storing unnecessary duplicates.
-If \code{cache} is provided and \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
+If \code{cache} is provided and \code{follow.link=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
 This avoids downloading another copy of the file if one is already available under a linked identifier.
 If no local duplicate can be found, \code{getFile} will download the earliest version of the file among the set of duplicates, 
 and then populate all other duplicates in the cache directory with hard links or copies.

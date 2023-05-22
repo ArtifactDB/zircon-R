@@ -13,7 +13,7 @@
 #' @param url String containing the URL of the ArtifactDB REST endpoint.
 #' @param cache Function to use for caching the result, see \code{\link{getFileMetadata}} for the requirements.
 #' If \code{NULL}, no caching is performed.
-#' @param follow.links Logical scalar indicating whether to search for links to duplicate files, see Details.
+#' @param follow.link Logical scalar indicating whether to search for links to duplicate files, see Details.
 #' @param user.agent String containing the user agent, see \code{\link{authorizedVerb}}.
 #'
 #' @return
@@ -25,7 +25,7 @@
 #'
 #' @details
 #' ArtifactDB instances support linking between identical files to avoid storing unnecessary duplicates.
-#' If \code{cache} is provided and \code{follow.links=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
+#' If \code{cache} is provided and \code{follow.link=TRUE}, \code{getFile} will follow the links to determine whether the requested file is the same as any previously cached files.
 #' This avoids downloading another copy of the file if one is already available under a linked identifier.
 #' If no local duplicate can be found, \code{getFile} will download the earliest version of the file among the set of duplicates, 
 #' and then populate all other duplicates in the cache directory with hard links or copies.
@@ -58,10 +58,10 @@
 #' @export
 #' @importFrom methods is
 #' @importFrom utils download.file
-getFile <- function(id, url, path=NULL, cache=NULL, follow.links=TRUE, user.agent=NULL) {
+getFile <- function(id, url, path=NULL, cache=NULL, follow.link=TRUE, user.agent=NULL) {
     if (!is.null(cache)) {
         id <- resolveLatestID(id, url)
-        if (follow.links) {
+        if (follow.link) {
             return(.get_original_linked_file(id, url, cache, user.agent))
         }
     }
