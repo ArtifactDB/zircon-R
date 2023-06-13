@@ -36,7 +36,7 @@ A list containing metadata for the specified file.
 The contents will depend on the schema used by the ArtifactDB at \code{url}.
 }
 \description{
-Retrieve metadata for a file or the file itself from an ArtifactDB using its REST endpoints.
+Retrieve a file or its metadata from an ArtifactDB instance.
 }
 \details{
 The caching function should accept:

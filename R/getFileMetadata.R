@@ -1,6 +1,6 @@
 #' Retrieve a file or its metadata 
 #'
-#' Retrieve metadata for a file or the file itself from an ArtifactDB using its REST endpoints.
+#' Retrieve a file or its metadata from an ArtifactDB instance.
 #'
 #' @param id String containing the ArtifactDB identifier for a file.
 #' This is a concatenated identifier involving the project name, file path and version,
