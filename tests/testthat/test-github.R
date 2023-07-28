@@ -12,18 +12,18 @@ cache.path <- tempfile(fileext=".txt")
 setAccessToken <- function(..., cache=TRUE) {
     setGitHubToken(...,
         cache.env=cache.env,
-        cache.path=if (cache) cache.path else NULL
+        github.cache.path=if (cache) cache.path else NULL
     )
 }
 
 accessTokenInfo <- function() {
     getGitHubTokenInfo(prompt=FALSE, 
         cache.env=cache.env, 
-        cache.path=cache.path
+        github.cache.path=cache.path
     )
 }
 
-test_that("token setting works correctly without caching", {
+test_that("Github token setting works correctly without caching", {
     unlink(cache.path)
 
     info <- setAccessToken(token, cache=FALSE)
@@ -35,7 +35,7 @@ test_that("token setting works correctly without caching", {
     expect_false(file.exists(cache.path))
 })
 
-test_that("token setting works correctly with caching", {
+test_that("Github token setting works correctly with caching", {
     info <- setAccessToken(token)
     expect_type(info$name, "character")
     expect_type(info$token, "character")
@@ -52,7 +52,7 @@ test_that("token setting works correctly with caching", {
     expect_identical(info, accessTokenInfo())
 })
 
-test_that("token wiping works correctly with caching", {
+test_that("GitHub token wiping works correctly with caching", {
     write(file=cache.path, character(0))
     info <- setAccessToken(NULL)
     expect_null(accessTokenInfo())

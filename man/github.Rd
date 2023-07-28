@@ -8,22 +8,27 @@
 \title{Authenticating via GitHub}
 \usage{
 setGitHubToken(
-  token,
+  github.token,
   cache.env,
-  cache.path = NULL,
+  github.cache.path = NULL,
   github.url = "https://api.github.com",
-  user.agent = NULL,
-  prompt.text = NULL
+  github.app.key = NULL,
+  github.app.secret = NULL,
+  user.agent = NULL
 )
 
-getGitHubTokenInfo(cache.env, cache.path = NULL, prompt = interactive(), ...)
+getGitHubTokenInfo(
+  cache.env,
+  github.cache.path = NULL,
+  prompt = interactive(),
+  ...
+)
 
 getJWTFromGitHub(
   cache.env,
-  client.id,
+  org.id,
+  jwt.url = NULL,
   jwt.cache.path = NULL,
-  gh.cache.path = NULL,
-  prompt = interactive(),
   user.agent = NULL,
   ...
 )
@@ -36,49 +41,92 @@ useGitHubIdentities(
 )
 }
 \arguments{
-\item{token}{String containing a GitHub personal access token.
-If missing, the user will be prompted to supply a token.
+\item{github.token}{String containing a GitHub personal access token.
+This should have the \code{"read:org"} and \code{"read:user"} scopes.
+If missing, the user will be prompted to use GitHub's Oauth web application flow to acquire a token.
 If \code{NULL}, any existing tokens are cleared.}
 
 \item{cache.env}{Environment to use to store the current GitHub token in an in-memory cache.
 This allows the same token to be transparently re-used in the same R session.}
 
-\item{cache.path}{String containing a path to a on-disk cache.
+\item{github.cache.path}{String containing a path to a file in which to store the GitHub token.
 This allows the same token to be transparently re-used across different R sessions.
 If \code{NULL}, no on-disk caching is performed.}
 
 \item{github.url}{String containing the URL to a GitHub REST API.}
 
-\item{user.agent}{String specifying the user agent for queries to various endpoints.}
+\item{github.app.key}{String containing the key for a GitHub Oauth app.
+If \code{NULL}, the default \dQuote{ArtifactDB} application is used.}
 
-\item{prompt.text}{String containing the prompt text for an interactively supplied token.}
+\item{github.app.secret}{String containing the secret for a GitHub Oauth app.
+If \code{NULL}, the default \dQuote{ArtifactDB} application is used.}
+
+\item{user.agent}{String specifying the user agent for queries to various endpoints.}
 
 \item{prompt}{Logical scalar indicating whether the user should be prompted to supply token details if no cached token exists.}
 
-\item{...}{Further arguments to pass to \code{setGitHubToken} when prompting for a new token.}
+\item{...}{For \code{getGitHubTokenInfo}, further arguments to pass to \code{setGitHubToken}.
+
+For \code{getJWTFromGitHub}, further arguments to pass to \code{getGitHubTokenInfo}. 
+
+For \code{useGitHubIdentities}, further arguments to pass to \code{getJWTFromGitHub}.}
+
+\item{org.id}{String containing the GitHub organization to use for identifying ArtifactDB roles.
+Users are expected to have public membership in this organization.}
+
+\item{jwt.url}{String containing the URL to a API to convert the GitHub token into a JSON web token.}
+
+\item{jwt.cache.path}{String containing a path to a file in which to store the JSON web token.
+This allows the same token to be transparently re-used across different R sessions.
+If \code{NULL}, no on-disk caching is performed.}
 }
 \value{
-For \code{setGitHubToken}, any non-\code{NULL} \code{token} (or its interactively supplied counterpart) will be cached in memory and/or on disk, depending on \code{cache.path}.
-A list is invisibly returned containing details about the token including its value, the corresponding user account and the expiry time.
+For \code{setGitHubToken}, any non-\code{NULL} \code{github.token} (or its interactively supplied counterpart) will be cached in memory and/or on disk, depending on \code{cache.path}.
+A list is invisibly returned containing details about the GitHub token including its value, the corresponding user account and the expiry time.
 If \code{token=NULL}, any cached token is cleared from disk and memory, and \code{NULL} is invisibly returned.
 
-For \code{getGitHubTokenInfo}, a list is returned containing the token details.
+For \code{getGitHubTokenInfo}, a list is returned containing the GitHub token details.
 If \code{prompt=FALSE} and no cached token is present, \code{NULL} is returned.
 
-For \code{useGitHubIdentities}, the availability and value of the token is used to configure \code{\link{identityAvailable}} and \code{\link{identityHeaders}}.
+For \code{getGitHubTokenInfo}, a list is returned containing the JSON web token and the expiry time.
+If no JSON web token is available but a GitHub personal access token is available, the latter will be used to request the former via \code{jwt.url}.
+If \code{prompt=FALSE} and no cached GitHub token is present, \code{NULL} is returned.
+
+For \code{useGitHubIdentities}, the availability and value of the JSON web token is used to configure \code{\link{identityAvailable}} and \code{\link{identityHeaders}}.
 A function is returned that, when executed, restores the previous values of \code{\link{identityAvailable}} and \code{\link{identityHeaders}};
 this is typically run in an \code{\link{on.exit}} clause.
 }
 \description{
 Configure \code{\link{authorizedVerb}} to use GitHub personal access tokens for authentication.
+Each GitHub token is then converted into a JSON web token for use in the ArtifactDB API.
 This is a useful default approach when no better authentication scheme is available.
 }
-\examples{
-\dontrun{setGitHubToken()}
+\details{
+We use GitHub as an identity provider for authenticating users, under the assumption that most users will have a GitHub account.
+Users can log in via the usual Oauth web application flow to obtain a GitHub access token.
+This is, in turn, converted into a JSON web token with roles that can be used to authorize actions on an ArtifactDB instance.
 
+We use GitHub teams to define roles for an ArtifactDB instance.
+Specifically, for a given organization in \code{org.id}, we look for any of the following teams:
+\itemize{
+\item \code{ArtifactDB-admins}: Users with administrative privileges in the ArtifactDB instance.
+This corresponds to an \code{"admin"} role.
+\item \code{ArtifactDB-creators}: Users who can create new projects.
+This corresponds to a \code{"creator"} role.
+\item \code{ArtifactDB-uploaders}: Users who can upload to existing projects.
+This corresponds to an \code{"uploader"} role.
+}
+Maintainers of an ArtifactDB instance should GitHub users to these teams to give them the appropriate roles.
+}
+\examples{
 cache.env <- new.env()
-cache.path <- tempfile()
-getGitHubTokenInfo(cache.env, cache.path, prompt=FALSE)
+gh.cache.path <- tempfile()
+\dontrun{setGitHubToken(cache.env=cache.env, github.cache.path=gh.cache.path)}
+
+getGitHubTokenInfo(cache.env, gh.cache.path, prompt=FALSE)
+
+jwt.cache.path <- tempfile()
+getJWTFromGitHub(cache.env, jwt.cache.path, prompt=FALSE)
 
 }
 \author{
