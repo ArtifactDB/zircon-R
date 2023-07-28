@@ -3,6 +3,7 @@
 \name{setGitHubToken}
 \alias{setGitHubToken}
 \alias{getGitHubTokenInfo}
+\alias{getJWTFromGitHub}
 \alias{useGitHubIdentities}
 \title{Authenticating via GitHub}
 \usage{
@@ -11,12 +12,28 @@ setGitHubToken(
   cache.env,
   cache.path = NULL,
   github.url = "https://api.github.com",
+  user.agent = NULL,
   prompt.text = NULL
 )
 
 getGitHubTokenInfo(cache.env, cache.path = NULL, prompt = interactive(), ...)
 
-useGitHubIdentities(cache.env, cache.path = NULL, ...)
+getJWTFromGitHub(
+  cache.env,
+  client.id,
+  jwt.cache.path = NULL,
+  gh.cache.path = NULL,
+  prompt = interactive(),
+  user.agent = NULL,
+  ...
+)
+
+useGitHubIdentities(
+  cache.env,
+  jwt.cache.path = NULL,
+  gh.cache.path = NULL,
+  ...
+)
 }
 \arguments{
 \item{token}{String containing a GitHub personal access token.
@@ -31,6 +48,8 @@ This allows the same token to be transparently re-used across different R sessio
 If \code{NULL}, no on-disk caching is performed.}
 
 \item{github.url}{String containing the URL to a GitHub REST API.}
+
+\item{user.agent}{String specifying the user agent for queries to various endpoints.}
 
 \item{prompt.text}{String containing the prompt text for an interactively supplied token.}
 

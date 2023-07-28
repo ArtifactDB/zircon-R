@@ -14,6 +14,7 @@
 #' @param prompt.text String containing the prompt text for an interactively supplied token.
 #' @param prompt Logical scalar indicating whether the user should be prompted to supply token details if no cached token exists.
 #' @param github.url String containing the URL to a GitHub REST API.
+#' @param user.agent String specifying the user agent for queries to various endpoints.
 #' @param ... Further arguments to pass to \code{setGitHubToken} when prompting for a new token.
 #'
 #' @return 
@@ -40,7 +41,7 @@
 #' @export
 #' @rdname github
 #' @importFrom httr GET add_headers content
-setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https://api.github.com", prompt.text=NULL) {
+setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https://api.github.com", user.agent=NULL, prompt.text=NULL) {
     cache <- !is.null(cache.path)
 
     if (!missing(token) && is.null(token)) {
@@ -70,7 +71,7 @@ setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https:
         cat(prompt.text)
         token <- readline("\n\nTOKEN: ")
         while (nchar(token)) {
-            res <- GET(endpoint, add_headers(Authorization=paste("Bearer ", token)))
+            res <- GET(endpoint, add_headers(Authorization=paste("Bearer ", token)), .user_agent(user.agent))
             if (res$status_code < 300) {
                 expiry <- .process_expiry(res)
                 name <- content(res)$login
@@ -86,7 +87,7 @@ setGitHubToken <- function(token, cache.env, cache.path=NULL, github.url="https:
         }
 
     } else if (!is.null(token)) {
-        res <- GET(endpoint, add_headers(Authorization=paste("Bearer ", token)))
+        res <- GET(endpoint, add_headers(Authorization=paste("Bearer ", token)), .user_agent(user.agent))
         if (res$status_code >= 300) {
             stop("failed to verify this token with GitHub (status code ", res$status_code, ")")
         }
@@ -155,9 +156,60 @@ getGitHubTokenInfo <- function(cache.env, cache.path=NULL, prompt=interactive(),
 
 #' @export
 #' @rdname github
-useGitHubIdentities <- function(cache.env, cache.path=NULL, ...) {
-    olda <- identityAvailable(function() !is.null(getGitHubTokenInfo(cache.env=cache.env, cache.path=cache.path, prompt=FALSE, ...)))
-    oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", getGitHubTokenInfo(cache.env=cache.env, cache.path=cache.path, ...)$token)))
+#' @importFrom httr POST add_headers content
+getJWTFromGitHub <- function(cache.env, client.id, jwt.cache.path=NULL, gh.cache.path=NULL, prompt=interactive(), user.agent=NULL, ...) {
+    token.info <- cache.env$jwt
+    jwt.cache <- !is.null(jwt.cache.path)
+
+    rerun <- FALSE
+    if (is.null(token.info)) {
+        if (!jwt.cache || !file.exists(jwt.cache.path)) {
+            rerun <- TRUE
+        } else {
+            raw.token.info <- readLines(jwt.cache.path)
+            token.info <- list(token = raw.token.info[1], expiry = as.double(raw.token.info[2]))
+            if (token.info$expiry <= as.double(Sys.time())) {
+                unlink(jwt.cache.path)
+                cache.env$jwt <- NULL
+                rerun <- TRUE
+            }
+        }
+    } else {
+        if (token.info$expiry <= as.double(Sys.time())) {
+            if (!jwt.cache) {
+                unlink(jwt.cache.path)
+            }
+            cache.env$jwt <- NULL
+            rerun <- TRUE
+        }
+    }
+
+    if (rerun) {
+        gh <- getGitHubTokenInfo(cache.env=cache.env, cache.path=gh.cache.path, prompt=prompt, user.agent=user.agent, ...)
+        if (is.null(gh)) {
+            return(NULL)
+        }
+
+        laundry <- "https://gh2jwt.aaron-lun.workers.dev/token"
+        res <- POST(laundry, body = list(orgs = I(client.id), to = client.id), encode = "json", add_headers(Authorization = paste("Bearer ", gh$token)), .user_agent(user.agent))
+        checkResponse(res)
+
+        info <- content(res)
+        token.info <- list(token = info$token, expiry = as.double(as.POSIXct(info$expires_at, format="%Y-%m-%dT%H:%M:%OSZ")))
+        if (jwt.cache) {
+            dir.create(dirname(jwt.cache.path), showWarnings=FALSE, recursive=TRUE)
+            writeLines(c(token.info$token, token.info$expiry), con=jwt.cache.path)
+        }
+    }
+
+    token.info
+}
+
+#' @export
+#' @rdname github
+useGitHubIdentities <- function(cache.env, jwt.cache.path=NULL, gh.cache.path=NULL, ...) {
+    olda <- identityAvailable(function() !is.null(getGitHubTokenInfo(cache.env=cache.env, cache.path=gh.cache.path, prompt=FALSE, ...)))
+    oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", getJWTFromGitHub(cache.env=cache.env, jwt.cache.path=jwt.cache.path, gh.cache.path=gh.cache.path, ...)$token)))
     function() {
         identityAvailable(olda)
         identityHeaders(oldh)
