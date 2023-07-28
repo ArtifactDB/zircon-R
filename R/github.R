@@ -230,13 +230,13 @@ getJWTFromGitHub <- function(cache.env, org.id, jwt.url=NULL, jwt.cache.path=NUL
 
 #' @export
 #' @rdname github
-useGitHubIdentities <- function(cache.env, jwt.cache.path=NULL, gh.cache.path=NULL, ...) {
+useGitHubIdentities <- function(...) {
     olda <- identityAvailable(function() 
-        !is.null(getJWTFromGitHub(cache.env=cache.env, cache.path=gh.cache.path, prompt=FALSE, ...))
+        !is.null(getJWTFromGitHub(prompt=FALSE, ...))
     )
 
     oldh <- identityHeaders(function() 
-        list(Authorization=paste0("Bearer ", getJWTFromGitHub(cache.env=cache.env, jwt.cache.path=jwt.cache.path, gh.cache.path=gh.cache.path, ...)$token))
+        list(Authorization=paste0("Bearer ", getJWTFromGitHub(...)$token))
     )
 
     function() {

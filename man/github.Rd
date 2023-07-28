@@ -33,12 +33,7 @@ getJWTFromGitHub(
   ...
 )
 
-useGitHubIdentities(
-  cache.env,
-  jwt.cache.path = NULL,
-  gh.cache.path = NULL,
-  ...
-)
+useGitHubIdentities(...)
 }
 \arguments{
 \item{github.token}{String containing a GitHub personal access token.
