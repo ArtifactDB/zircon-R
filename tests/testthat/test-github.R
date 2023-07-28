@@ -59,3 +59,42 @@ test_that("GitHub token wiping works correctly with caching", {
     expect_false(file.exists(cache.path)) # wipes the cached file.
     unlink(cache.path)
 })
+
+jwt.cache.path <- tempfile(fileext=".txt")
+
+setAccessToken(token)
+jwtAccessTokenInfo <- function(cache = FALSE) {
+    getJWTFromGitHub(prompt=FALSE, 
+        cache.env=cache.env, 
+        org.id="CollaboratorDB",
+        jwt.cache.path=if (cache) jwt.cache.path else NULL,
+        github.cache.path=cache.path
+    )
+}
+
+test_that("JWT token setting works correctly without caching", {
+    unlink(jwt.cache.path)
+    cache.env$jwt <- NULL
+
+    info <- jwtAccessTokenInfo()
+    expect_type(info$token, "character")
+    expect_type(info$expires, "double")
+    expect_false(file.exists(jwt.cache.path))
+})
+
+test_that("JWT token setting works correctly with caching", {
+    unlink(jwt.cache.path)
+    cache.env$jwt <- NULL
+
+    info <- jwtAccessTokenInfo(TRUE)
+    expect_type(info$token, "character")
+    expect_type(info$expires, "double")
+    expect_true(file.exists(jwt.cache.path))
+
+    # Fetches it from cache.
+    expect_identical(cache.env$jwt$token, info$token) # checking that we're wiping the right thing.
+    cache.env$jwt <- NULL
+    expect_identical(info, jwtAccessTokenInfo(TRUE))
+})
+
+

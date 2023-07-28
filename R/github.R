@@ -72,10 +72,13 @@
 #' gh.cache.path <- tempfile()
 #' \dontrun{setGitHubToken(cache.env=cache.env, github.cache.path=gh.cache.path)}
 #'
-#' getGitHubTokenInfo(cache.env, gh.cache.path, prompt=FALSE)
+#' getGitHubTokenInfo(cache.env, github.cache.path=gh.cache.path)
 #'
 #' jwt.cache.path <- tempfile()
-#' getJWTFromGitHub(cache.env, jwt.cache.path, prompt=FALSE)
+#' getJWTFromGitHub(cache.env, 
+#'    "CollaboratorDB", 
+#'    jwt.cache.path=jwt.cache.path, 
+#'    github.cache.path=gh.cache.path)
 #'
 #' @export
 #' @rdname github
@@ -182,15 +185,15 @@ getJWTFromGitHub <- function(cache.env, org.id, jwt.url=NULL, jwt.cache.path=NUL
             rerun <- TRUE
         } else {
             raw.token.info <- readLines(jwt.cache.path)
-            token.info <- list(token = raw.token.info[1], expiry = as.double(raw.token.info[2]))
-            if (token.info$expiry <= as.double(Sys.time())) {
+            token.info <- list(token = raw.token.info[1], expires = as.double(raw.token.info[2]))
+            if (token.info$expires <= as.double(Sys.time())) {
                 unlink(jwt.cache.path)
                 cache.env$jwt <- NULL
                 rerun <- TRUE
             }
         }
     } else {
-        if (token.info$expiry <= as.double(Sys.time())) {
+        if (token.info$expires <= as.double(Sys.time())) {
             if (!jwt.cache) {
                 unlink(jwt.cache.path)
             }
@@ -213,11 +216,13 @@ getJWTFromGitHub <- function(cache.env, org.id, jwt.url=NULL, jwt.cache.path=NUL
         checkResponse(res)
 
         info <- content(res)
-        token.info <- list(token = info$token, expiry = as.double(as.POSIXct(info$expires_at, format="%Y-%m-%dT%H:%M:%OSZ")))
+        token.info <- list(token = info$token, expires = as.double(as.POSIXct(info$expires_at, format="%Y-%m-%dT%H:%M:%OSZ")))
+
         if (jwt.cache) {
             dir.create(dirname(jwt.cache.path), showWarnings=FALSE, recursive=TRUE)
-            writeLines(c(token.info$token, token.info$expiry), con=jwt.cache.path)
+            writeLines(c(token.info$token, token.info$expires), con=jwt.cache.path)
         }
+        cache.env$jwt <- token.info
     }
 
     token.info

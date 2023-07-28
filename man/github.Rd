@@ -123,10 +123,13 @@ cache.env <- new.env()
 gh.cache.path <- tempfile()
 \dontrun{setGitHubToken(cache.env=cache.env, github.cache.path=gh.cache.path)}
 
-getGitHubTokenInfo(cache.env, gh.cache.path, prompt=FALSE)
+getGitHubTokenInfo(cache.env, github.cache.path=gh.cache.path)
 
 jwt.cache.path <- tempfile()
-getJWTFromGitHub(cache.env, jwt.cache.path, prompt=FALSE)
+getJWTFromGitHub(cache.env, 
+   "CollaboratorDB", 
+   jwt.cache.path=jwt.cache.path, 
+   github.cache.path=gh.cache.path)
 
 }
 \author{
