@@ -15,7 +15,7 @@
 #' @param quote.dash Logical scalar indicating whether words containing dashes should quoted to avoid tokenization of the components.
 #' 
 #' @return A list of lists where each inner list corresponds to a matching file and contains its metadata.
-#' The metadata entry for each file is equivalent to that returned by \code{\link{.getFileMetadata}}.
+#' The metadata entry for each file is equivalent to that returned by \code{\link{getFileMetadata}}.
 #'
 #' @details
 #' If \code{latest=TRUE} and \code{fields} is not \code{NULL}, the output list will contain extra fields required for sorting versions.

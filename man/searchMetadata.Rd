@@ -39,7 +39,7 @@ Defaults to 50.}
 }
 \value{
 A list of lists where each inner list corresponds to a matching file and contains its metadata.
-The metadata entry for each file is equivalent to that returned by \code{\link{.getFileMetadata}}.
+The metadata entry for each file is equivalent to that returned by \code{\link{getFileMetadata}}.
 }
 \description{
 Search an ArtfiactDB based on the file/project metadata.
