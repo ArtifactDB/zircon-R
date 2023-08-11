@@ -10,7 +10,8 @@ cloneProjectVersion(
   project,
   version,
   link.only = FALSE,
-  cache = NULL
+  cache = NULL,
+  user.agent = NULL
 )
 }
 \arguments{

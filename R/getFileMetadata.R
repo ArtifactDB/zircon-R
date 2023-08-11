@@ -65,7 +65,7 @@
 #' @rdname getFileMetadata
 #' @importFrom httr content 
 #' @importFrom jsonlite fromJSON
-getFileMetadata <- function(id, url, cache=NULL, raw=FALSE, format=c("list", "text"), follow.link=FALSE, follow.redirect=TRUE, user.agent=NULL) {
+getFileMetadata <- function(id, url, cache=NULL, raw=FALSE, follow.link=FALSE, follow.redirect=TRUE, user.agent=NULL) {
     if (!is.null(cache)) {
         id <- resolveLatestID(id, url)
     }
@@ -73,6 +73,7 @@ getFileMetadata <- function(id, url, cache=NULL, raw=FALSE, format=c("list", "te
     output <- .obtain_metadata(
         id, 
         url, 
+        cache=cache,
         raw=raw, 
         follow.link=follow.link, 
         user.agent=user.agent,
@@ -97,7 +98,7 @@ getFileMetadata <- function(id, url, cache=NULL, raw=FALSE, format=c("list", "te
 }
 
 #' @importFrom httr content 
-.obtain_metadata <- function(id, url, raw, follow.link, user.agent, from.cache, from.request) {
+.obtain_metadata <- function(id, url, cache, raw, follow.link, user.agent, from.cache, from.request) {
     endpoint <- paste(url, "files", URLencode(id, reserved=TRUE), "metadata", sep="/")
     options <- character(0)
     if (follow.link) {
