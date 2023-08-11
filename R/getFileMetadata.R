@@ -6,6 +6,8 @@
 #' This is a concatenated identifier involving the project name, file path and version,
 #' i.e., \code{<project>:<path>@<version>} (see Examples).
 #' @param url String containing the URL of the ArtifactDB REST endpoint.
+#' @param raw Logical scalar indicating whether to obtain the raw metadata (in the format provided by the uploader, rather than indexed by ArtifactDB).
+#' Setting this to \code{TRUE} avoids some loss of data from indexing at the cost of speed.
 #' @param cache Function to perform caching, see Details.
 #' If \code{NULL}, no caching is performed.
 #' @param follow.link Logical scalar indicating whether to follow deduplicating links, if \code{id} is linked to another target resource. 
@@ -61,16 +63,51 @@
 #'
 #' @export
 #' @rdname getFileMetadata
-#' @importFrom httr GET content write_disk
+#' @importFrom httr content 
 #' @importFrom jsonlite fromJSON
-getFileMetadata <- function(id, url, cache=NULL, follow.link=FALSE, follow.redirect=TRUE, user.agent=NULL) {
+getFileMetadata <- function(id, url, cache=NULL, raw=FALSE, format=c("list", "text"), follow.link=FALSE, follow.redirect=TRUE, user.agent=NULL) {
     if (!is.null(cache)) {
         id <- resolveLatestID(id, url)
     }
 
+    output <- .obtain_metadata(
+        id, 
+        url, 
+        raw=raw, 
+        follow.link=follow.link, 
+        user.agent=user.agent,
+        from.cache=function(path) fromJSON(path, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE),
+        from.request=function(req) content(req, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+    )
+
+    output <- .restore_schema(output)
+
+    if (follow.redirect && startsWith(output[["$schema"]], "redirection/")) {
+        for (found in output$redirection$targets) {
+            if (found$type == "local") {
+                unpacked <- unpackID(id)
+                id2 <- packID(unpacked$project, found$location, unpacked$version)
+                output <- getFileMetadata(id2, url, cache=cache, follow.link=follow.link, follow.redirect=follow.redirect, user.agent=user.agent)
+                break
+            }
+        }
+    }
+
+    output
+}
+
+#' @importFrom httr content 
+.obtain_metadata <- function(id, url, raw, follow.link, user.agent, from.cache, from.request) {
     endpoint <- paste(url, "files", URLencode(id, reserved=TRUE), "metadata", sep="/")
+    options <- character(0)
     if (follow.link) {
-        endpoint <- paste0(endpoint, "?follow_link=true")
+        options <- c(options, "follow_link=true")
+    }
+    if (raw) {
+        options <- c(options, "raw=true")
+    }
+    if (length(options)) {
+        endpoint <- paste0(endpoint, "?", paste(options, collapse="&"))
     }
 
     BASEFUN <- function(...) {
@@ -84,23 +121,10 @@ getFileMetadata <- function(id, url, cache=NULL, follow.link=FALSE, follow.redir
             key = endpoint,
             save = function(path) BASEFUN(write_disk(path, overwrite=TRUE))
         )
-        output <- fromJSON(path, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
+        output <- from.cache(path)
     } else {
         raw <- BASEFUN()
-        output <- content(raw, simplifyVector=TRUE, simplifyDataFrame=FALSE, simplifyMatrix=FALSE)
-    }
-
-    output <- .restore_schema(output)
-
-    if (follow.redirect && startsWith(output[["$schema"]], "redirection/")) {
-        for (found in output$redirection$targets) {
-            if (found$type == "local") {
-                unpacked <- unpackID(id)
-                id2 <- packID(unpacked$project, found$location, unpacked$version)
-                output <- getFileMetadata(id2, url, cache=cache, follow.link=follow.link, follow.redirect=follow.redirect, user.agent=user.agent)
-                break
-            }
-        }
+        output <- from.request(raw)
     }
 
     output
