@@ -46,11 +46,11 @@ cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cac
             metapath <- paste0(metapath, ".json")
         }
 
-        mid <- packID(project, metapath, version)
         dest <- file.path(dir, metapath)
+        fid <- packID(project, m$path, version)
         output <- .obtain_metadata(
-            id, 
-            url, 
+            id=fid,
+            url=url, 
             cache=cache,
             raw=TRUE,
             follow.link=FALSE,
@@ -60,10 +60,8 @@ cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cac
         )
 
         if (!startsWith(m[["$schema"]], "redirection/") && !pure.meta) {
-            fid <- packID(project, m$path, version)
             if (link.only) {
                 createPlaceholderLink(dir, m$path, fid)
-
             } else {
                 final <- file.path(dir, m$path)
                 if (is.null(cache)) {
