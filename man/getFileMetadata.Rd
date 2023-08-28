@@ -8,6 +8,7 @@ getFileMetadata(
   id,
   url,
   cache = NULL,
+  raw = FALSE,
   follow.link = FALSE,
   follow.redirect = TRUE,
   user.agent = NULL
@@ -22,6 +23,9 @@ i.e., \code{<project>:<path>@<version>} (see Examples).}
 
 \item{cache}{Function to perform caching, see Details.
 If \code{NULL}, no caching is performed.}
+
+\item{raw}{Logical scalar indicating whether to obtain the raw metadata (in the format provided by the uploader, rather than indexed by ArtifactDB).
+Setting this to \code{TRUE} avoids some loss of data from indexing at the cost of speed.}
 
 \item{follow.link}{Logical scalar indicating whether to follow deduplicating links, if \code{id} is linked to another target resource. 
 If \code{TRUE}, metadata for the target resource is returned.}

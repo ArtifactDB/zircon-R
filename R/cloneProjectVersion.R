@@ -30,7 +30,7 @@
 #' \code{\link{createPlaceholderLink}}, for the link creation procedure.
 #' 
 #' @export
-cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cache=NULL) {
+cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cache=NULL, user.agent=NULL) {
     dir.create(dir, showWarnings=FALSE)
     meta <- getProjectMetadata(project, version=version, url=url)
 
@@ -46,47 +46,35 @@ cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cac
             metapath <- paste0(metapath, ".json")
         }
 
-        if (startsWith(m[["$schema"]], "redirection/")) {
-            m <- m[setdiff(names(m), "_extra")]
+        dest <- file.path(dir, metapath)
+        fid <- packID(project, m$path, version)
+        output <- .obtain_metadata(
+            id=fid,
+            url=url, 
+            cache=cache,
+            raw=TRUE,
+            follow.link=FALSE,
+            user.agent=user.agent,
+            from.cache=file.copy(path, dest),
+            from.request=function(req) writeBin(content(req, as="raw"), dest)
+        )
 
-            # Dealing with these guys separately, because /files will just
-            # redirect to the destination file, but we want to actually save
-            # the redirection metadata. Round-trip shouldn't be a problem here.
-            write(jsonlite::toJSON(m, auto_unbox=TRUE), file.path(dir, metapath))
-
-        } else {
-            # Using the /files endpoint to download the metadata documents,
-            # which is technically allowed. This avoids the _extra stuff and
-            # potential problems from round-tripping JSON through R (namely,
-            # handling of length-1 vectors and numerical precision).
-            .cache_copy(
-                packID(project, metapath, version), 
-                url=url, 
-                cache=cache, 
-                final=file.path(dir, metapath)
-            )
-
-            if (!pure.meta) {
-                fid <- packID(project, m$path, version)
-                if (link.only) {
-                    createPlaceholderLink(dir, m$path, fid)
+        if (!startsWith(m[["$schema"]], "redirection/") && !pure.meta) {
+            if (link.only) {
+                createPlaceholderLink(dir, m$path, fid)
+            } else {
+                final <- file.path(dir, m$path)
+                if (is.null(cache)) {
+                    getFile(fid, url=url, path=final)
                 } else {
-                    .cache_copy(fid, url=url, cache=cache, final=file.path(dir, m$path))
+                    # Making an explicit copy to avoid mutation of the cache
+                    # when someone modifies the clone.
+                    cached <- getFile(fid, url=url, cache=cache, user.agent=user.agent)
+                    if (!file.copy(cached, final)) {
+                        stop("failed to copy cached file during cloning")
+                    }
                 }
             }
-        }
-    }
-}
-
-.cache_copy <- function(id, url, cache, final) {
-    if (is.null(cache)) {
-        getFile(id, url=url, path=final)
-    } else {
-        # Making an explicit copy to avoid mutation of the cache
-        # when someone modifies the clone.
-        cached <- getFile(id, url=url, cache=cache)
-        if (!file.copy(cached, final)) {
-            stop("failed to copy cached file during cloning")
         }
     }
 }
