@@ -8,6 +8,7 @@
 #' @param version String containing the project version.
 #' @param link.only Logical scalar indicating whether to create placeholder links instead of copies of the non-metadata files.
 #' @param cache Caching function to use in \code{\link{getFile}} or \code{\link{getFileMetadata}}.
+#' @param user.agent String containing the user agent, see \code{\link{authorizedVerb}}.
 #' 
 #' @return A directory is created at \code{dir} with the contents of the specified project version.
 #' \code{NULL} is invisibly returned.
@@ -55,7 +56,7 @@ cloneProjectVersion <- function(dir, url, project, version, link.only=FALSE, cac
             raw=TRUE,
             follow.link=FALSE,
             user.agent=user.agent,
-            from.cache=file.copy(path, dest),
+            from.cache=function(path) file.copy(path, dest),
             from.request=function(req) writeBin(content(req, as="raw"), dest)
         )
 

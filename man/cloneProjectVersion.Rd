@@ -26,6 +26,8 @@ cloneProjectVersion(
 \item{link.only}{Logical scalar indicating whether to create placeholder links instead of copies of the non-metadata files.}
 
 \item{cache}{Caching function to use in \code{\link{getFile}} or \code{\link{getFileMetadata}}.}
+
+\item{user.agent}{String containing the user agent, see \code{\link{authorizedVerb}}.}
 }
 \value{
 A directory is created at \code{dir} with the contents of the specified project version.
